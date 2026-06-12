@@ -159,9 +159,9 @@ const PATHS: Record<IconName, JSX.Element> = {
   ),
   sunset: (
     <>
-      <path d="M12 10V2M8.5 5.5L12 2l3.5 3.5" />
-      <path d="M2 18h20M4 14h2M18 14h2" />
-      <path d="M7.5 14a4.5 4.5 0 0 1 9 0" />
+      <path d="M12 2v6M9 5l3 3 3-3" />
+      <path d="M2 18h20M4 14.5h1.5M18.5 14.5H20" />
+      <path d="M7.5 14.5a4.5 4.5 0 0 1 9 0" />
     </>
   ),
   sparkles: (

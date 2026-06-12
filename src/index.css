@@ -288,8 +288,39 @@ input[type='number']::-webkit-inner-spin-button {
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: 252px 1fr 320px;
+  grid-template-columns: 252px 5px 1fr 5px 320px;
   min-height: 0;
+}
+
+/* drag-resize handles between panels and above the timeline */
+.splitter {
+  position: relative;
+  background: transparent;
+  z-index: 4;
+  touch-action: none;
+}
+.splitter.col {
+  cursor: col-resize;
+}
+.splitter.row {
+  height: 5px;
+  cursor: row-resize;
+}
+.splitter::after {
+  content: '';
+  position: absolute;
+  background: transparent;
+  transition: background 0.12s ease;
+}
+.splitter.col::after {
+  inset: 0 2px;
+}
+.splitter.row::after {
+  inset: 2px 0;
+}
+.splitter:hover::after,
+.splitter:active::after {
+  background: var(--accent);
 }
 
 /* ---- toolbar ----------------------------------------------------------- */
@@ -666,12 +697,12 @@ input[type='number']::-webkit-inner-spin-button {
 .num {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: 1;
+  gap: 5px;
+  flex: 1 1 0;
   background: var(--surface);
   border: 1px solid var(--line-2);
   border-radius: var(--r-ctrl);
-  padding-left: 8px;
+  padding-left: 6px;
   min-width: 0;
 }
 .num:focus-within {
@@ -682,14 +713,16 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--faint);
   font-size: 11px;
   font-weight: 600;
-  min-width: 14px;
+  flex: 0 0 auto;
 }
 .num input {
   text-align: right;
   font-variant-numeric: tabular-nums;
   border: none;
   background: transparent;
-  padding: 6px 8px 6px 0;
+  padding: 6px 7px 6px 0;
+  min-width: 0;
+  flex: 1 1 0;
 }
 .num input:focus {
   box-shadow: none;
@@ -701,7 +734,7 @@ input[type='number']::-webkit-inner-spin-button {
   padding: 6px 14px;
 }
 .prop-label {
-  width: 56px;
+  width: 50px;
   flex: 0 0 auto;
   color: var(--text-2);
   font-weight: 500;
@@ -763,7 +796,7 @@ input[type='number']::-webkit-inner-spin-button {
 
 /* ---- timeline ---------------------------------------------------------- */
 .timeline {
-  height: 268px;
+  height: var(--timeline-h, 268px);
   border-top: 1px solid var(--line);
   background: var(--surface);
   overflow: hidden;

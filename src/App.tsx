@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useEditor } from './store/editorStore'
 import { Toolbar } from './components/Toolbar'
 import { Stage } from './components/Stage'
@@ -6,8 +6,67 @@ import { LayerPanel } from './components/LayerPanel'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { Timeline } from './components/Timeline'
 
+// Persisted, drag-resizable layout sizes (panel widths + timeline height).
+const LAYOUT_KEY = 'lottie-studio:layout'
+const DEFAULT_LAYOUT = { left: 252, right: 320, timeline: 268 }
+const LIMITS = {
+  left: [190, 440],
+  right: [296, 480],
+  timeline: [150, 560],
+} as const
+
+type LayoutKey = keyof typeof DEFAULT_LAYOUT
+type Layout = Record<LayoutKey, number>
+
+function loadLayout(): Layout {
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY)
+    if (raw) return { ...DEFAULT_LAYOUT, ...(JSON.parse(raw) as Partial<Layout>) }
+  } catch {
+    /* ignore */
+  }
+  return { ...DEFAULT_LAYOUT }
+}
+
 export default function App() {
   const playing = useEditor((s) => s.playing)
+  const [layout, setLayout] = useState(loadLayout)
+
+  // persist layout whenever it settles
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout))
+    } catch {
+      /* ignore */
+    }
+  }, [layout])
+
+  // generic splitter drag — sign flips for right-edge panels, axis picks x/y
+  const startResize = useCallback(
+    (key: LayoutKey, axis: 'x' | 'y', sign: 1 | -1) => (e: React.PointerEvent) => {
+      e.preventDefault()
+      const startPos = axis === 'x' ? e.clientX : e.clientY
+      const startVal = layout[key]
+      const [min, max] = LIMITS[key]
+      ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
+      const onMove = (ev: PointerEvent) => {
+        const pos = axis === 'x' ? ev.clientX : ev.clientY
+        const next = Math.max(min, Math.min(max, startVal + sign * (pos - startPos)))
+        setLayout((l: Layout) => (l[key] === next ? l : { ...l, [key]: next }))
+      }
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+      document.body.style.cursor = axis === 'x' ? 'col-resize' : 'row-resize'
+      document.body.style.userSelect = 'none'
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+    },
+    [layout],
+  )
 
   // playback loop — advances the playhead while playing, looping at duration
   useEffect(() => {
@@ -64,13 +123,19 @@ export default function App() {
   }, [])
 
   return (
-    <div className="app">
+    <div className="app" style={{ ['--timeline-h' as string]: `${layout.timeline}px` }}>
       <Toolbar />
-      <main className="workspace">
+      <main
+        className="workspace"
+        style={{ gridTemplateColumns: `${layout.left}px 5px 1fr 5px ${layout.right}px` }}
+      >
         <LayerPanel />
+        <div className="splitter col" onPointerDown={startResize('left', 'x', 1)} title="Drag to resize" />
         <Stage />
+        <div className="splitter col" onPointerDown={startResize('right', 'x', -1)} title="Drag to resize" />
         <PropertiesPanel />
       </main>
+      <div className="splitter row" onPointerDown={startResize('timeline', 'y', -1)} title="Drag to resize" />
       <Timeline />
     </div>
   )
