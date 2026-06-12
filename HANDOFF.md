@@ -1,0 +1,51 @@
+# Handoff / log sesji
+
+Notatka, żeby z każdego urządzenia (też telefon) było widać, co ustaliliśmy i gdzie jesteśmy.
+Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego repo.
+
+## Sesja: 2026-06-12 (start projektu)
+
+### Decyzje
+- **Cel projektu:** webowy **kreator animacji Lottie od zera** (timeline, warstwy, keyframe'y, presety),
+  nie tylko edytor istniejących plików.
+- **Stack:** Vite + React + TypeScript + Zustand + lottie-web. Wybrane pod zaawansowane funkcje
+  (dużo stanu: warstwy + keyframe'y per property + playhead + undo/redo).
+- **Repo:** PUBLIC na GitHubie (jak grid-blob / typestorm / wiredraft), konto `vod123qwe`.
+- **Hosting:** GitHub Pages przez GitHub Actions, auto-deploy na push do `main`.
+
+### Gdzie to jest
+- **Live:** https://vod123qwe.github.io/lottie-studio/
+- **Repo:** https://github.com/vod123qwe/lottie-studio
+- **Lokalnie:** `F:\AI - Tests\lottie-studio\`, dev `npm run dev` (w preview na porcie 5181).
+
+### Stan v0.1 (zweryfikowane, działa)
+- Scena z podglądem na żywo (lottie-web) + overlay zaznaczenia, drag kształtu = zmiana pozycji.
+- Warstwy: prostokąty i elipsy; reorder / duplikuj / ukryj / zmień nazwę.
+- Timeline: ruler ze scrubem, wiersz na warstwę, rozwinięcie w ścieżki property, draggable keyframe.
+- Keyframe'y dla position / scale / rotation / opacity / fill + easing (linear, ease in/out/in-out).
+- Auto-key, undo/redo (drag = jeden wpis historii).
+- Presety: Fade In/Out, Pop In, Slide ←/→, Spin, Pulse, Drop In.
+- Export Lottie JSON + Save/Open własnego projektu.
+- `tsc --noEmit` czysto, brak błędów w konsoli. Sprawdzone: Spin → 2 keyframe rotacji
+  (macierz ~164° przy klatce 41 = poprawnie), Pop In → 3 keyframe scale, transport działa.
+
+### Mapa plików (gdzie czego szukać)
+- `src/core/model.ts` — model edytora (źródło prawdy, nie surowy Lottie).
+- `src/core/builder.ts` — model → poprawny Lottie (bodymovin) JSON.
+- `src/core/interpolate.ts` — wartość property w danej klatce (cubic-bezier).
+- `src/core/presets.ts` — presety animacji.
+- `src/store/editorStore.ts` — Zustand: stan, mutacje, undo/redo, live-drag.
+- `src/components/` — Stage, Toolbar, LayerPanel, PropertiesPanel, Timeline.
+- `.github/workflows/deploy.yml` — build + deploy na Pages.
+
+### Pętla pracy z telefonu (przez Claude w chmurze)
+1. W Claude (chmura) wybierz repo `vod123qwe/lottie-studio`, zrób zmiany, zmerguj PR do `main`.
+2. Push do `main` sam odpala deploy (~1 min).
+3. Odśwież https://vod123qwe.github.io/lottie-studio/ na telefonie i zobacz efekt.
+
+### Roadmap / następne kroki
+- [ ] Import istniejących `.json` / `.lottie` (reverse-map do modelu edytora).
+- [ ] Export `.lottie` (dotLottie).
+- [ ] Więcej kształtów: pen/path tool, polygon/star, tekst.
+- [ ] Spatial bezier dla pozycji (krzywe ruchu), motion blur.
+- [ ] Color picker keyframe na timeline, copy/paste keyframe'ów.
