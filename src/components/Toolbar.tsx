@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useEditor } from '../store/editorStore'
 import { exportLottieString } from '../core/builder'
 import { importSvg } from '../core/svgImport'
+import { ICON_LIBRARY } from '../core/iconLibrary'
 import type { Composition } from '../core/model'
 import { Icon } from './Icons'
 
@@ -45,6 +46,13 @@ export function Toolbar() {
 
   const fileRef = useRef<HTMLInputElement>(null)
   const svgRef = useRef<HTMLInputElement>(null)
+  const [iconsOpen, setIconsOpen] = useState(false)
+
+  const insertIcon = (svg: string) => {
+    const { layers } = importSvg(svg, useEditor.getState().comp)
+    if (layers.length) addLayers(layers)
+    setIconsOpen(false)
+  }
 
   const exportLottie = () => download(`${slug(comp.name)}.json`, exportLottieString(comp))
   const saveProject = () =>
@@ -122,6 +130,34 @@ export function Toolbar() {
           <Icon name="image" /> Import SVG
         </button>
         <input ref={svgRef} type="file" accept=".svg,image/svg+xml" hidden onChange={openSvg} />
+        <div className="icon-picker-wrap">
+          <button
+            className={iconsOpen ? 'toggle on' : ''}
+            onClick={() => setIconsOpen((v) => !v)}
+            title="Insert an icon to animate"
+          >
+            <Icon name="sparkles" /> Icons
+          </button>
+          {iconsOpen && (
+            <>
+              <div className="icon-picker-backdrop" onPointerDown={() => setIconsOpen(false)} />
+              <div className="icon-picker">
+                <div className="icon-picker-head">Insert an icon</div>
+                <div className="icon-picker-grid">
+                  {ICON_LIBRARY.map((ic) => (
+                    <button
+                      key={ic.id}
+                      className="icon-pick"
+                      title={ic.name}
+                      onClick={() => insertIcon(ic.svg)}
+                      dangerouslySetInnerHTML={{ __html: ic.svg }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="group transport">

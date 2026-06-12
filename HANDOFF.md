@@ -130,6 +130,14 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (chwytak playheada + biblioteka ikon)
+- **Playhead handle**: przeciągany koralowy „chwytak" z numerem klatki w linijce (sticky), pointer
+  capture → scrub działa też dotykiem; usunięty stary trójkąt, linia 2px. Ruler 34px.
+- **Biblioteka ikon** (`core/iconLibrary.ts`, 18 ikon): heart/star/bolt/cloud/drop/moon/bookmark/pin/
+  play/chat/sun/bell/arrow/check/smiley/flag/bike/rocket. Przycisk **Icons** w toolbarze → popover
+  z siatką; klik wstawia ikonę przez `importSvg` → **osobne warstwy ścieżek** (np. rower = 2 koła +
+  rama), gotowe pod presety/morph/flagę. Zweryfikowane (18 ikon, Bike→5 warstw, handle 0→12).
+
 ## Sesja: 2026-06-12 (wariant mobilny)
 - Breakpoint **≤820px** → osobny układ (`useIsMobile` w `App.tsx`): scena na pełną szerokość,
   przewijalny w poziomie toolbar, dolny pasek zakładek **Layers / Design / Animate** otwierający

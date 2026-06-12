@@ -439,6 +439,62 @@ input[type='number']::-webkit-inner-spin-button {
   box-shadow: 0 0 0 3px rgba(245, 54, 92, 0.18);
 }
 
+/* icon library picker */
+.icon-picker-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.icon-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+}
+.icon-picker {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: 296px;
+  max-width: 86vw;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-pop);
+  padding: 10px;
+}
+.icon-picker-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 2px 2px 8px;
+}
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+.icon-pick {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 7px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: none;
+  color: var(--text-2);
+}
+.icon-pick:hover {
+  background: var(--accent-soft);
+  border-color: rgba(47, 91, 246, 0.4);
+}
+.icon-pick svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
 /* ---- panels ------------------------------------------------------------ */
 .panel {
   background: var(--surface);
@@ -1059,8 +1115,41 @@ input[type='number']::-webkit-inner-spin-button {
   top: 0;
   z-index: 3;
   background: var(--surface);
-  height: 30px;
+  height: 34px;
   border-bottom: 1px solid var(--line-2);
+}
+.ph-handle {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  z-index: 6;
+  cursor: grab;
+  touch-action: none;
+}
+.ph-handle:active {
+  cursor: grabbing;
+}
+.ph-frame {
+  display: block;
+  position: relative;
+  background: var(--coral);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.25);
+}
+.ph-frame::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--coral);
 }
 .ruler-row .tl-label.corner {
   border-right: 1px solid var(--line-2);
@@ -1130,20 +1219,10 @@ input[type='number']::-webkit-inner-spin-button {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 1.5px;
+  width: 2px;
   background: var(--coral);
   pointer-events: none;
   z-index: 4;
-}
-.playhead::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -5px;
-  width: 0;
-  height: 0;
-  border: 5px solid transparent;
-  border-top: 7px solid var(--coral);
 }
 
 /* ---- mobile shell ------------------------------------------------------ */

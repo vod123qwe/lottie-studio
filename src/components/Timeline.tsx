@@ -102,6 +102,8 @@ export function Timeline() {
   const setPlayhead = useEditor((s) => s.setPlayhead)
 
   const bodyRef = useRef<HTMLDivElement>(null)
+  const rulerTrackRef = useRef<HTMLDivElement>(null)
+  const handleDrag = useRef(false)
   const [viewW, setViewW] = useState(0)
   const [zoom, setZoom] = useState(1)
   const scrubbing = useRef(false)
@@ -189,6 +191,7 @@ export function Timeline() {
           <div className="tl-label corner">Timeline</div>
           <div
             className="tl-track ruler"
+            ref={rulerTrackRef}
             style={{ width: contentW }}
             onPointerDown={(e) => {
               scrubbing.current = true
@@ -205,6 +208,26 @@ export function Timeline() {
                 {f}
               </span>
             ))}
+            <div
+              className="ph-handle"
+              style={{ left: playhead * pxPerFrame }}
+              title="Drag to scrub"
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                handleDrag.current = true
+                ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
+              }}
+              onPointerMove={(e) => {
+                if (handleDrag.current && rulerTrackRef.current)
+                  scrubFrom(e.clientX, rulerTrackRef.current.getBoundingClientRect().left)
+              }}
+              onPointerUp={(e) => {
+                handleDrag.current = false
+                ;(e.currentTarget as Element).releasePointerCapture?.(e.pointerId)
+              }}
+            >
+              <span className="ph-frame">{Math.round(playhead)}</span>
+            </div>
           </div>
         </div>
 
