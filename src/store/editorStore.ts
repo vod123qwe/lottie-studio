@@ -91,6 +91,7 @@ interface EditorState {
   setPropertyLive: (layerId: string, prop: PropKind, value: number[]) => void
   setGradientLive: (id: string, gradient: Gradient | null) => void
   setStrokeColorLive: (id: string, color: number[]) => void
+  setStrokeGradientLive: (id: string, gradient: Gradient | null) => void
   setCompLive: (patch: Partial<Composition>) => void
   setLayerPositionsLive: (positions: Record<string, [number, number]>) => void
   mutateLive: (producer: (draft: Composition) => void) => void
@@ -449,6 +450,13 @@ export const useEditor = create<EditorState>((set, get) => {
         const draft = clone(s.comp)
         const l = draft.layers.find((x) => x.id === id)
         if (l && l.stroke) l.stroke = { ...l.stroke, color }
+        return { comp: draft }
+      }),
+    setStrokeGradientLive: (id, gradient) =>
+      set((s) => {
+        const draft = clone(s.comp)
+        const l = draft.layers.find((x) => x.id === id)
+        if (l && l.stroke) l.stroke = { ...l.stroke, gradient }
         return { comp: draft }
       }),
     setCompLive: (patch) =>

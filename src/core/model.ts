@@ -70,10 +70,11 @@ export interface SubPath {
   closed: boolean
 }
 
-/** Optional stroke for path layers (solid color, constant width). */
+/** Optional stroke for path layers (solid color or gradient, constant width). */
 export interface Stroke {
-  color: number[] // [r,g,b] 0..1
+  color: number[] // [r,g,b] 0..1 (used when no gradient)
   width: number
+  gradient?: Gradient | null
 }
 
 /** A gradient fill stop. `offset` 0..1, `color` [r,g,b] 0..1, `opacity` 0..1. */

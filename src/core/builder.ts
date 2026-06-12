@@ -101,10 +101,8 @@ function buildShapeItems(layer: Layer): object[] {
   }))
 }
 
-/** Lottie gradient fill (gf) from a layer's static gradient + bbox. */
-function buildGradientFill(layer: Layer) {
-  const g = layer.gradient!
-  const [w, h] = layer.size
+/** Shared gradient payload (type + start/end points + color/alpha ramp). */
+function gradientParts(g: NonNullable<Layer['gradient']>, w: number, h: number) {
   const stops = [...g.stops].sort((a, b) => a.offset - b.offset)
   let s: number[]
   let e: number[]
@@ -113,22 +111,37 @@ function buildGradientFill(layer: Layer) {
     e = [w / 2, 0]
   } else {
     const a = ((g.angle ?? 0) * Math.PI) / 180
-    const hx = (Math.cos(a) * w) / 2
-    const hy = (Math.sin(a) * h) / 2
-    s = [-hx, -hy]
-    e = [hx, hy]
+    s = [(-Math.cos(a) * w) / 2, (-Math.sin(a) * h) / 2]
+    e = [(Math.cos(a) * w) / 2, (Math.sin(a) * h) / 2]
   }
   const colorPart = stops.flatMap((st) => [st.offset, st.color[0], st.color[1], st.color[2]])
   const alphaPart = stops.flatMap((st) => [st.offset, st.opacity])
   return {
-    ty: 'gf',
-    nm: 'Gradient',
     t: g.type === 'radial' ? 2 : 1,
     s: { a: 0, k: s },
     e: { a: 0, k: e },
     g: { p: stops.length, k: { a: 0, k: [...colorPart, ...alphaPart] } },
+  }
+}
+
+/** Lottie gradient fill (gf) from a layer's static gradient + bbox. */
+function buildGradientFill(layer: Layer) {
+  const [w, h] = layer.size
+  return { ty: 'gf', nm: 'Gradient', ...gradientParts(layer.gradient!, w, h), o: { a: 0, k: 100 }, r: 1, bm: 0 }
+}
+
+/** Lottie gradient stroke (gs). */
+function buildGradientStroke(layer: Layer) {
+  const [w, h] = layer.size
+  return {
+    ty: 'gs',
+    nm: 'Gradient Stroke',
+    ...gradientParts(layer.stroke!.gradient!, w, h),
+    w: { a: 0, k: layer.stroke!.width },
     o: { a: 0, k: 100 },
-    r: 1,
+    lc: 2,
+    lj: 2,
+    ml: 4,
     bm: 0,
   }
 }
@@ -151,17 +164,21 @@ function buildLayer(layer: Layer, index: number, op: number) {
     }
   }
   if (layer.stroke) {
-    items.push({
-      ty: 'st',
-      nm: 'Stroke',
-      c: { a: 0, k: [layer.stroke.color[0], layer.stroke.color[1], layer.stroke.color[2], 1] },
-      o: { a: 0, k: 100 },
-      w: { a: 0, k: layer.stroke.width },
-      lc: 2,
-      lj: 2,
-      ml: 4,
-      bm: 0,
-    })
+    if (layer.stroke.gradient && layer.stroke.gradient.stops.length >= 2) {
+      items.push(buildGradientStroke(layer))
+    } else {
+      items.push({
+        ty: 'st',
+        nm: 'Stroke',
+        c: { a: 0, k: [layer.stroke.color[0], layer.stroke.color[1], layer.stroke.color[2], 1] },
+        o: { a: 0, k: 100 },
+        w: { a: 0, k: layer.stroke.width },
+        lc: 2,
+        lj: 2,
+        ml: 4,
+        bm: 0,
+      })
+    }
   }
   items.push({
     ty: 'tr',

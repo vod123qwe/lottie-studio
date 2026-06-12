@@ -292,6 +292,7 @@ export function PropertiesPanel() {
   const setPropertyLive = useEditor((s) => s.setPropertyLive)
   const setGradientLive = useEditor((s) => s.setGradientLive)
   const setStrokeColorLive = useEditor((s) => s.setStrokeColorLive)
+  const setStrokeGradientLive = useEditor((s) => s.setStrokeGradientLive)
   const beginInteractive = useEditor((s) => s.beginInteractive)
   const endInteractive = useEditor((s) => s.endInteractive)
   const selCount = useEditor((s) => s.selectedLayerIds.length)
@@ -379,10 +380,22 @@ export function PropertiesPanel() {
                 <span>Stroke</span>
                 <ColorSwatch
                   title="Stroke"
+                  allowGradient
                   begin={beginInteractive}
                   end={endInteractive}
-                  value={{ kind: 'solid', rgb: layer.stroke.color }}
-                  onChange={(p) => p.kind === 'solid' && setStrokeColorLive(layer.id, p.rgb)}
+                  value={
+                    layer.stroke.gradient
+                      ? { kind: 'gradient', gradient: layer.stroke.gradient }
+                      : { kind: 'solid', rgb: layer.stroke.color }
+                  }
+                  onChange={(p) => {
+                    if (p.kind === 'solid') {
+                      if (layer.stroke?.gradient) setStrokeGradientLive(layer.id, null)
+                      setStrokeColorLive(layer.id, p.rgb)
+                    } else {
+                      setStrokeGradientLive(layer.id, p.gradient)
+                    }
+                  }}
                 />
                 <div className="num" style={{ maxWidth: 96 }}>
                   <span>W</span>
