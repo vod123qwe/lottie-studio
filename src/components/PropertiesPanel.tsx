@@ -66,6 +66,18 @@ const PRESET_ICONS: Record<string, IconName> = {
   float: 'arrow-up',
   breathe: 'activity',
   swing: 'rotate',
+  // motion
+  ride: 'activity',
+  hover: 'arrow-up',
+  jump: 'arrow-up',
+  wheelie: 'rotate',
+  sway: 'activity',
+  walkBob: 'move',
+  // fx
+  speedLines: 'wind',
+  dust: 'sparkles',
+  sparkle: 'sparkles',
+  glow: 'sun',
 }
 
 /** Collapsible inspector section with a chevron header. */
@@ -172,19 +184,16 @@ function Presets({ layerId }: { layerId: string }) {
   const list = PRESETS.filter((p) => p.category === cat)
   return (
     <Section title="Presets">
-      <div className="row" style={{ paddingBottom: 2 }}>
-        <div className="seg" style={{ width: '100%' }}>
-          {PRESET_CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              className={c.id === cat ? 'active' : ''}
-              style={{ flex: 1 }}
-              onClick={() => setCat(c.id)}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+      <div className="cat-tabs">
+        {PRESET_CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            className={'cat-tab' + (c.id === cat ? ' active' : '')}
+            onClick={() => setCat(c.id)}
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
       <div className="preset-grid">
         {list.map((p) => (

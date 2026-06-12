@@ -113,6 +113,14 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
 ### Auto-merge
 - Ustalone: po każdej przetestowanej zmianie robię fast-forward na `main` (deploy live sam rusza).
 
+## Sesja: 2026-06-12 (motion library — etap 1: Motion + FX)
+- Preset system: `build` może zwrócić `PresetResult { changes?, addLayers? }` — preset może dokładać
+  warstwy. `store.applyPreset` wstawia je tuż za targetem (z-order), undo jako 1 krok.
+- Kategoria **Motion** (transform): Ride, Hover, Jump, Wheelie, Sway, Walk Bob.
+- Kategoria **FX** (dokłada warstwy): Speed Lines, Dust, Sparkle, Glow Pulse.
+- `factory.createSolidLayer`; pasek kategorii przerobiony na przewijane chipy `.cat-tabs` (7 kategorii).
+- Następne etapy: animowane ścieżki → Flag/Wave (kat. Path), potem Morph; potem multi-select; preview.
+
 ## Sesja: 2026-06-12 (zoom timeline)
 - **Timeline zoom 1×–24×** (`Timeline.tsx`): sticky etykiety, scroll poziomy, kontrolki −/suwak/+/fit
   + readout, Ctrl/Cmd+scroll z kotwiczeniem na kursorze. Zweryfikowane (ticks 19→91, content rośnie).

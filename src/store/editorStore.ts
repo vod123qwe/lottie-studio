@@ -376,14 +376,20 @@ export const useEditor = create<EditorState>((set, get) => {
       const comp = get().comp
       const layer = findLayer(comp, layerId)
       if (!layer) return
-      const changes = preset.build(layer, comp)
+      const out = preset.build(layer, comp)
+      const result = Array.isArray(out) ? { changes: out } : out
       withHistory((c) => {
         const l = findLayer(c, layerId)
         if (!l) return
-        for (const change of changes) {
+        for (const change of result.changes ?? []) {
           const p = l[change.prop]
           p.animated = true
           p.keyframes = change.keyframes
+        }
+        if (result.addLayers?.length) {
+          const idx = c.layers.findIndex((x) => x.id === layerId)
+          // helper layers sit just behind the target in the stack
+          c.layers.splice(idx < 0 ? c.layers.length : idx + 1, 0, ...result.addLayers)
         }
       })
     },

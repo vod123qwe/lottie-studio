@@ -42,6 +42,31 @@ export function createLayer(shape: ShapeType, comp: Composition): Layer {
   }
 }
 
+/** A plain rect/ellipse layer with explicit geometry (used by FX presets). */
+export function createSolidLayer(opts: {
+  name: string
+  shape: 'rect' | 'ellipse'
+  center: Vec2
+  size: Vec2
+  fill: number[]
+  cornerRadius?: number
+  opacity?: number
+}): Layer {
+  return {
+    id: uid('layer'),
+    name: opts.name,
+    shape: opts.shape,
+    size: [Math.max(1, opts.size[0]), Math.max(1, opts.size[1])],
+    cornerRadius: opts.cornerRadius ?? 0,
+    visible: true,
+    position: staticProp([opts.center[0], opts.center[1]]),
+    scale: staticProp([100, 100]),
+    rotation: staticProp([0]),
+    opacity: staticProp([opts.opacity ?? 100]),
+    fillColor: staticProp(opts.fill),
+  }
+}
+
 /** Build a path layer from imported geometry (already in comp pixel space). */
 export function createPathLayer(opts: {
   name: string

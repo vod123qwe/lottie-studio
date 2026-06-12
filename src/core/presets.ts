@@ -1,5 +1,5 @@
-import type { Composition, Easing, Keyframe, Layer, PropKind } from './model'
-import { uid } from './factory'
+import type { Composition, Easing, Keyframe, Layer, Property, PropKind } from './model'
+import { createSolidLayer, uid } from './factory'
 import { evalProperty } from './interpolate'
 
 // ---------------------------------------------------------------------------
@@ -11,13 +11,16 @@ import { evalProperty } from './interpolate'
 // offer a segmented filter instead of one long list.
 // ---------------------------------------------------------------------------
 
-export type PresetCategory = 'in' | 'out' | 'emphasis' | 'loop'
+export type PresetCategory = 'in' | 'out' | 'emphasis' | 'loop' | 'motion' | 'fx' | 'path'
 
 export const PRESET_CATEGORIES: { id: PresetCategory; label: string }[] = [
   { id: 'in', label: 'In' },
   { id: 'out', label: 'Out' },
   { id: 'emphasis', label: 'Emphasis' },
   { id: 'loop', label: 'Loop' },
+  { id: 'motion', label: 'Motion' },
+  { id: 'fx', label: 'FX' },
+  { id: 'path', label: 'Path' },
 ]
 
 export interface PresetChange {
@@ -25,12 +28,22 @@ export interface PresetChange {
   keyframes: Keyframe[]
 }
 
+/**
+ * A preset may keyframe the target layer's properties (`changes`) and/or add
+ * brand-new helper layers (`addLayers`, e.g. speed lines). `build` can return
+ * either the bare change list or a richer result.
+ */
+export interface PresetResult {
+  changes?: PresetChange[]
+  addLayers?: Layer[]
+}
+
 export interface Preset {
   id: string
   name: string
   category: PresetCategory
   hint: string
-  build: (layer: Layer, comp: Composition) => PresetChange[]
+  build: (layer: Layer, comp: Composition) => PresetChange[] | PresetResult
 }
 
 const kf = (t: number, value: number[], easing: Easing = 'easeInOut'): Keyframe => ({
@@ -43,6 +56,12 @@ const kf = (t: number, value: number[], easing: Easing = 'easeInOut'): Keyframe 
 /** A short intro/outro window: ~30% of the timeline, capped to a sensible length. */
 const introLen = (comp: Composition) => Math.min(comp.duration * 0.3, comp.fr)
 const restPos = (layer: Layer) => evalProperty(layer.position, 0)
+const animProp = (value: number[], keyframes: Keyframe[]): Property => ({
+  animated: true,
+  value,
+  keyframes,
+})
+const clampT = (comp: Composition, t: number) => Math.max(0, Math.min(comp.duration, Math.round(t)))
 
 export const PRESETS: Preset[] = [
   // ---- entrances --------------------------------------------------------
@@ -551,6 +570,290 @@ export const PRESETS: Preset[] = [
           ],
         },
       ]
+    },
+  },
+
+  // ---- motion (bring it to life with transforms) ------------------------
+  {
+    id: 'ride',
+    name: 'Ride',
+    category: 'motion',
+    hint: 'Rolling bob + tilt — like riding along',
+    build: (layer, comp) => {
+      const [x, y] = restPos(layer)
+      const d = comp.duration
+      const A = Math.min(comp.h * 0.03, 12)
+      return [
+        {
+          prop: 'position',
+          keyframes: [
+            kf(0, [x, y], 'easeInOut'),
+            kf(d * 0.25, [x, y - A], 'easeInOut'),
+            kf(d * 0.5, [x, y], 'easeInOut'),
+            kf(d * 0.75, [x, y - A * 0.6], 'easeInOut'),
+            kf(d, [x, y], 'easeInOut'),
+          ],
+        },
+        {
+          prop: 'rotation',
+          keyframes: [kf(0, [-3], 'easeInOut'), kf(d * 0.5, [3], 'easeInOut'), kf(d, [-3], 'easeInOut')],
+        },
+      ]
+    },
+  },
+  {
+    id: 'hover',
+    name: 'Hover',
+    category: 'motion',
+    hint: 'Float up and down while gently breathing',
+    build: (layer, comp) => {
+      const [x, y] = restPos(layer)
+      const d = comp.duration
+      const A = Math.min(comp.h * 0.05, 22)
+      return [
+        {
+          prop: 'position',
+          keyframes: [
+            kf(0, [x, y], 'easeInOut'),
+            kf(d * 0.5, [x, y - A], 'easeInOut'),
+            kf(d, [x, y], 'easeInOut'),
+          ],
+        },
+        {
+          prop: 'scale',
+          keyframes: [
+            kf(0, [100, 100], 'easeInOut'),
+            kf(d * 0.5, [103, 103], 'easeInOut'),
+            kf(d, [100, 100], 'easeInOut'),
+          ],
+        },
+      ]
+    },
+  },
+  {
+    id: 'jump',
+    name: 'Jump',
+    category: 'motion',
+    hint: 'Hop with squash & stretch',
+    build: (layer, comp) => {
+      const [x, y] = restPos(layer)
+      const d = comp.duration
+      const H = Math.min(comp.h * 0.25, 140)
+      return [
+        {
+          prop: 'position',
+          keyframes: [
+            kf(0, [x, y], 'easeOut'),
+            kf(d * 0.45, [x, y - H], 'easeIn'),
+            kf(d * 0.9, [x, y], 'easeOut'),
+            kf(d, [x, y]),
+          ],
+        },
+        {
+          prop: 'scale',
+          keyframes: [
+            kf(0, [100, 100], 'easeOut'),
+            kf(d * 0.18, [90, 112], 'easeOut'),
+            kf(d * 0.45, [100, 100], 'easeInOut'),
+            kf(d * 0.85, [112, 88], 'easeOut'),
+            kf(d, [100, 100], 'easeOut'),
+          ],
+        },
+      ]
+    },
+  },
+  {
+    id: 'wheelie',
+    name: 'Wheelie',
+    category: 'motion',
+    hint: 'Tip back, hold, then settle',
+    build: (_l, comp) => {
+      const d = comp.duration
+      return [
+        {
+          prop: 'rotation',
+          keyframes: [
+            kf(0, [0], 'easeOut'),
+            kf(d * 0.2, [-18], 'easeOut'),
+            kf(d * 0.8, [-18], 'easeIn'),
+            kf(d, [0], 'easeInOut'),
+          ],
+        },
+      ]
+    },
+  },
+  {
+    id: 'sway',
+    name: 'Sway',
+    category: 'motion',
+    hint: 'Gentle side-to-side rocking',
+    build: (_l, comp) => {
+      const d = comp.duration
+      return [
+        {
+          prop: 'rotation',
+          keyframes: [
+            kf(0, [0], 'easeInOut'),
+            kf(d * 0.25, [8], 'easeInOut'),
+            kf(d * 0.5, [0], 'easeInOut'),
+            kf(d * 0.75, [-8], 'easeInOut'),
+            kf(d, [0], 'easeInOut'),
+          ],
+        },
+      ]
+    },
+  },
+  {
+    id: 'walkBob',
+    name: 'Walk Bob',
+    category: 'motion',
+    hint: 'Small stepping bob, like walking',
+    build: (layer, comp) => {
+      const [x, y] = restPos(layer)
+      const d = comp.duration
+      const A = Math.min(comp.h * 0.022, 9)
+      const n = 6
+      const ks: Keyframe[] = []
+      for (let i = 0; i <= n; i++) ks.push(kf((d * i) / n, [x, y - (i % 2 ? A : 0)], 'easeInOut'))
+      return [{ prop: 'position', keyframes: ks }]
+    },
+  },
+
+  // ---- FX (add helper layers that imply motion / energy) ----------------
+  {
+    id: 'speedLines',
+    name: 'Speed Lines',
+    category: 'fx',
+    hint: 'Streaks behind the shape — suggests it’s moving',
+    build: (layer, comp) => {
+      const [cx, cy] = restPos(layer)
+      const [tw, th] = layer.size
+      const d = comp.duration
+      const fill = evalProperty(layer.fillColor, 0)
+      const lineW = Math.max(10, tw * 0.45)
+      const lineH = Math.max(2, th * 0.04)
+      const left = cx - tw * 0.5
+      const n = 4
+      const seg = d * 0.45
+      const fade = seg * 0.3
+      const out: Layer[] = []
+      for (let i = 0; i < n; i++) {
+        const yy = cy - th * 0.3 + (th * 0.6 * i) / Math.max(1, n - 1)
+        const startX = left - lineW * 0.1
+        const endX = startX - tw * 0.7
+        const t0 = Math.min(d - seg, d * 0.1 * i)
+        const L = createSolidLayer({
+          name: `Speed line ${i + 1}`,
+          shape: 'rect',
+          center: [startX, yy],
+          size: [lineW, lineH],
+          fill,
+          cornerRadius: lineH / 2,
+          opacity: 0,
+        })
+        L.position = animProp(
+          [startX, yy],
+          [kf(clampT(comp, t0), [startX, yy], 'linear'), kf(clampT(comp, t0 + seg), [endX, yy], 'linear')],
+        )
+        L.opacity = animProp(
+          [0],
+          [
+            kf(clampT(comp, t0), [0], 'linear'),
+            kf(clampT(comp, t0 + fade), [75], 'linear'),
+            kf(clampT(comp, t0 + seg - fade), [75], 'linear'),
+            kf(clampT(comp, t0 + seg), [0], 'linear'),
+          ],
+        )
+        out.push(L)
+      }
+      return { addLayers: out }
+    },
+  },
+  {
+    id: 'dust',
+    name: 'Dust',
+    category: 'fx',
+    hint: 'Little puffs kicking up from the base',
+    build: (layer, comp) => {
+      const [cx, cy] = restPos(layer)
+      const [tw, th] = layer.size
+      const d = comp.duration
+      const fill = evalProperty(layer.fillColor, 0)
+      const baseY = cy + th * 0.45
+      const n = 5
+      const life = d * 0.4
+      const out: Layer[] = []
+      for (let i = 0; i < n; i++) {
+        const px = cx + (i - (n - 1) / 2) * (tw * 0.18)
+        const sz = Math.max(4, tw * 0.06)
+        const t0 = Math.min(d - 1, d * 0.08 * i)
+        const L = createSolidLayer({ name: `Dust ${i + 1}`, shape: 'ellipse', center: [px, baseY], size: [sz, sz], fill, opacity: 0 })
+        L.scale = animProp([30, 30], [kf(clampT(comp, t0), [30, 30], 'easeOut'), kf(clampT(comp, t0 + life), [115, 115], 'easeOut')])
+        L.opacity = animProp(
+          [0],
+          [kf(clampT(comp, t0), [0], 'easeOut'), kf(clampT(comp, t0 + life * 0.3), [55], 'easeOut'), kf(clampT(comp, t0 + life), [0], 'easeIn')],
+        )
+        L.position = animProp(
+          [px, baseY],
+          [kf(clampT(comp, t0), [px, baseY], 'easeOut'), kf(clampT(comp, t0 + life), [px + (i - (n - 1) / 2) * 8, baseY - th * 0.15], 'easeOut')],
+        )
+        out.push(L)
+      }
+      return { addLayers: out }
+    },
+  },
+  {
+    id: 'sparkle',
+    name: 'Sparkle',
+    category: 'fx',
+    hint: 'Twinkles popping around the shape',
+    build: (layer, comp) => {
+      const [cx, cy] = restPos(layer)
+      const [tw, th] = layer.size
+      const d = comp.duration
+      const life = d * 0.35
+      const pts = [
+        [-0.4, -0.4],
+        [0.45, -0.3],
+        [0.35, 0.4],
+        [-0.35, 0.35],
+        [0.05, -0.52],
+      ]
+      const out: Layer[] = []
+      pts.forEach((p, i) => {
+        const px = cx + p[0] * tw
+        const py = cy + p[1] * th
+        const sz = Math.max(5, tw * 0.07)
+        const t0 = Math.min(d - 1, d * 0.12 * i)
+        const L = createSolidLayer({ name: `Sparkle ${i + 1}`, shape: 'ellipse', center: [px, py], size: [sz, sz], fill: [1, 1, 1], opacity: 0 })
+        L.scale = animProp(
+          [0, 0],
+          [kf(clampT(comp, t0), [0, 0], 'easeOut'), kf(clampT(comp, t0 + life * 0.4), [120, 120], 'easeInOut'), kf(clampT(comp, t0 + life), [0, 0], 'easeIn')],
+        )
+        L.opacity = animProp(
+          [0],
+          [kf(clampT(comp, t0), [0]), kf(clampT(comp, t0 + life * 0.4), [100]), kf(clampT(comp, t0 + life), [0])],
+        )
+        out.push(L)
+      })
+      return { addLayers: out }
+    },
+  },
+  {
+    id: 'glow',
+    name: 'Glow Pulse',
+    category: 'fx',
+    hint: 'Soft pulsing halo behind the shape',
+    build: (layer, comp) => {
+      const [cx, cy] = restPos(layer)
+      const [tw, th] = layer.size
+      const d = comp.duration
+      const fill = evalProperty(layer.fillColor, 0)
+      const sz = Math.max(tw, th) * 1.4
+      const L = createSolidLayer({ name: 'Glow', shape: 'ellipse', center: [cx, cy], size: [sz, sz], fill, opacity: 0 })
+      L.opacity = animProp([0], [kf(0, [0], 'easeInOut'), kf(d * 0.5, [38], 'easeInOut'), kf(d, [0], 'easeInOut')])
+      L.scale = animProp([90, 90], [kf(0, [90, 90], 'easeInOut'), kf(d * 0.5, [112, 112], 'easeInOut'), kf(d, [90, 90], 'easeInOut')])
+      return { addLayers: [L] }
     },
   },
 ]
