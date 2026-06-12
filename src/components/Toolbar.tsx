@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useEditor } from '../store/editorStore'
 import { exportLottieString } from '../core/builder'
+import { importSvg } from '../core/svgImport'
 import type { Composition } from '../core/model'
 import { Icon } from './Icons'
 
@@ -39,8 +40,10 @@ export function Toolbar() {
   const redo = useEditor((s) => s.redo)
   const newProject = useEditor((s) => s.newProject)
   const loadComposition = useEditor((s) => s.loadComposition)
+  const addLayers = useEditor((s) => s.addLayers)
 
   const fileRef = useRef<HTMLInputElement>(null)
+  const svgRef = useRef<HTMLInputElement>(null)
 
   const exportLottie = () => download(`${slug(comp.name)}.json`, exportLottieString(comp))
   const saveProject = () =>
@@ -58,6 +61,20 @@ export function Toolbar() {
       } catch {
         alert('Could not read that file.')
       }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const openSvg = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const { layers, warnings } = importSvg(String(reader.result), useEditor.getState().comp)
+      if (layers.length) addLayers(layers)
+      if (warnings.length && !layers.length) alert(warnings.join('\n'))
+      else if (warnings.length) console.warn('SVG import:', warnings.join('; '))
     }
     reader.readAsText(file)
     e.target.value = ''
@@ -97,6 +114,10 @@ export function Toolbar() {
         <button onClick={() => addLayer('ellipse')}>
           <Icon name="circle" /> Ellipse
         </button>
+        <button onClick={() => svgRef.current?.click()} title="Import an SVG as editable layers">
+          <Icon name="image" /> Import SVG
+        </button>
+        <input ref={svgRef} type="file" accept=".svg,image/svg+xml" hidden onChange={openSvg} />
       </div>
 
       <div className="group transport">

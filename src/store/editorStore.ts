@@ -52,6 +52,7 @@ interface EditorState {
 
   // layers
   addLayer: (shape: ShapeType) => void
+  addLayers: (layers: Layer[]) => void
   deleteLayer: (id: string) => void
   duplicateLayer: (id: string) => void
   renameLayer: (id: string, name: string) => void
@@ -59,6 +60,9 @@ interface EditorState {
   reorderLayer: (id: string, dir: -1 | 1) => void
   setLayerSize: (id: string, size: [number, number]) => void
   setCornerRadius: (id: string, r: number) => void
+  setFillEnabled: (id: string, enabled: boolean) => void
+  setStrokeColor: (id: string, color: number[]) => void
+  setStrokeWidth: (id: string, width: number) => void
 
   // properties / keyframes
   setProperty: (layerId: string, prop: PropKind, value: number[]) => void
@@ -204,6 +208,13 @@ export const useEditor = create<EditorState>((set, get) => {
       })
       set({ selectedLayerId: layer.id })
     },
+    addLayers: (layers) => {
+      if (!layers.length) return
+      withHistory((c) => {
+        c.layers.unshift(...layers)
+      })
+      set({ selectedLayerId: layers[0].id })
+    },
     deleteLayer: (id) => {
       withHistory((c) => {
         c.layers = c.layers.filter((l) => l.id !== id)
@@ -255,6 +266,21 @@ export const useEditor = create<EditorState>((set, get) => {
       withHistory((c) => {
         const l = findLayer(c, id)
         if (l) l.cornerRadius = Math.max(0, r)
+      }),
+    setFillEnabled: (id, enabled) =>
+      withHistory((c) => {
+        const l = findLayer(c, id)
+        if (l) l.fillEnabled = enabled
+      }),
+    setStrokeColor: (id, color) =>
+      withHistory((c) => {
+        const l = findLayer(c, id)
+        if (l && l.stroke) l.stroke = { ...l.stroke, color }
+      }),
+    setStrokeWidth: (id, width) =>
+      withHistory((c) => {
+        const l = findLayer(c, id)
+        if (l && l.stroke) l.stroke = { ...l.stroke, width: Math.max(0, width) }
       }),
 
     // ---- properties / keyframes ----------------------------------------

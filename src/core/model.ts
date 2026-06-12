@@ -34,7 +34,26 @@ export interface Property {
   keyframes: Keyframe[] // kept sorted by `t`
 }
 
-export type ShapeType = 'rect' | 'ellipse'
+export type ShapeType = 'rect' | 'ellipse' | 'path'
+
+/**
+ * A single closed/open bezier contour, stored Lottie-style and **relative to
+ * the layer center** (anchor). `v` are vertices; `i`/`o` are the in/out
+ * tangents expressed relative to their vertex. Imported SVG paths become one
+ * or more of these.
+ */
+export interface SubPath {
+  v: Vec2[]
+  i: Vec2[]
+  o: Vec2[]
+  closed: boolean
+}
+
+/** Optional stroke for path layers (solid color, constant width). */
+export interface Stroke {
+  color: number[] // [r,g,b] 0..1
+  width: number
+}
 
 /** The transform/appearance properties every layer exposes to the timeline. */
 export type PropKind =
@@ -64,9 +83,14 @@ export interface Layer {
   id: string
   name: string
   shape: ShapeType
-  size: Vec2 // shape width/height in px
+  size: Vec2 // shape width/height in px (bounding box for paths)
   cornerRadius: number // rect only
   visible: boolean
+  // path geometry — present only when shape === 'path'
+  path?: SubPath[]
+  // appearance extras
+  fillEnabled?: boolean // undefined = filled (back-compat); false = no fill
+  stroke?: Stroke | null
   // animatable transform + appearance
   position: Property
   scale: Property

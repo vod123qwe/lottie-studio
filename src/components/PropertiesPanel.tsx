@@ -176,12 +176,17 @@ function KeyframeEasing() {
   )
 }
 
+const SHAPE_SUB: Record<string, string> = { rect: 'rectangle', ellipse: 'ellipse', path: 'path' }
+
 export function PropertiesPanel() {
   const layer = useSelectedLayer()
   const playhead = useEditor((s) => s.playhead)
   const setProperty = useEditor((s) => s.setProperty)
   const setLayerSize = useEditor((s) => s.setLayerSize)
   const setCornerRadius = useEditor((s) => s.setCornerRadius)
+  const setFillEnabled = useEditor((s) => s.setFillEnabled)
+  const setStrokeColor = useEditor((s) => s.setStrokeColor)
+  const setStrokeWidth = useEditor((s) => s.setStrokeWidth)
 
   return (
     <section className="panel props-panel">
@@ -191,41 +196,77 @@ export function PropertiesPanel() {
 
       {layer && (
         <>
-          <Section title="Shape" sub={layer.shape === 'rect' ? 'rectangle' : 'ellipse'}>
-            <div className="row">
-              <NumField
-                label="W"
-                value={layer.size[0]}
-                min={1}
-                onCommit={(w) => setLayerSize(layer.id, [w, layer.size[1]])}
-              />
-              <NumField
-                label="H"
-                value={layer.size[1]}
-                min={1}
-                onCommit={(h) => setLayerSize(layer.id, [layer.size[0], h])}
-              />
-            </div>
-            {layer.shape === 'rect' && (
-              <div className="row">
-                <NumField
-                  label="R"
-                  value={layer.cornerRadius}
-                  min={0}
-                  onCommit={(r) => setCornerRadius(layer.id, r)}
-                />
-                <div className="num" style={{ visibility: 'hidden' }} />
-              </div>
+          <Section title="Shape" sub={SHAPE_SUB[layer.shape]}>
+            {layer.shape !== 'path' && (
+              <>
+                <div className="row">
+                  <NumField
+                    label="W"
+                    value={layer.size[0]}
+                    min={1}
+                    onCommit={(w) => setLayerSize(layer.id, [w, layer.size[1]])}
+                  />
+                  <NumField
+                    label="H"
+                    value={layer.size[1]}
+                    min={1}
+                    onCommit={(h) => setLayerSize(layer.id, [layer.size[0], h])}
+                  />
+                </div>
+                {layer.shape === 'rect' && (
+                  <div className="row">
+                    <NumField
+                      label="R"
+                      value={layer.cornerRadius}
+                      min={0}
+                      onCommit={(r) => setCornerRadius(layer.id, r)}
+                    />
+                    <div className="num" style={{ visibility: 'hidden' }} />
+                  </div>
+                )}
+              </>
             )}
+
             <label className="color-field">
               <span>Fill</span>
               <input
                 type="color"
                 value={rgbToHex(evalProperty(layer.fillColor, playhead))}
+                disabled={layer.fillEnabled === false}
                 onChange={(e) => setProperty(layer.id, 'fillColor', hexToRgb(e.target.value))}
               />
+              {layer.shape === 'path' && (
+                <input
+                  type="checkbox"
+                  className="switch"
+                  checked={layer.fillEnabled !== false}
+                  title="Toggle fill"
+                  onChange={(e) => setFillEnabled(layer.id, e.target.checked)}
+                />
+              )}
               <PropControls layerId={layer.id} kind="fillColor" prop={layer.fillColor} />
             </label>
+
+            {layer.shape === 'path' && layer.stroke && (
+              <label className="color-field">
+                <span>Stroke</span>
+                <input
+                  type="color"
+                  value={rgbToHex(layer.stroke.color)}
+                  onChange={(e) => setStrokeColor(layer.id, hexToRgb(e.target.value))}
+                />
+                <div className="num" style={{ maxWidth: 96 }}>
+                  <span>W</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={round(layer.stroke.width)}
+                    onChange={(e) => setStrokeWidth(layer.id, parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              </label>
+            )}
           </Section>
 
           <Section title="Transform">

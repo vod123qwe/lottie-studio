@@ -57,29 +57,68 @@ function buildProp(p: Property, dim: Dim) {
   return { a: 1, k }
 }
 
-function buildShapeItem(layer: Layer) {
+/** Shape (geometry) items for a layer's group — one or more for paths. */
+function buildShapeItems(layer: Layer): object[] {
   const [w, h] = layer.size
   if (layer.shape === 'ellipse') {
-    return {
-      ty: 'el',
-      nm: 'Ellipse',
-      d: 1,
-      p: { a: 0, k: [0, 0] },
-      s: { a: 0, k: [w, h] },
-    }
+    return [{ ty: 'el', nm: 'Ellipse', d: 1, p: { a: 0, k: [0, 0] }, s: { a: 0, k: [w, h] } }]
   }
-  return {
-    ty: 'rc',
-    nm: 'Rectangle',
-    d: 1,
-    p: { a: 0, k: [0, 0] },
-    s: { a: 0, k: [w, h] },
-    r: { a: 0, k: layer.cornerRadius },
+  if (layer.shape === 'rect') {
+    return [
+      {
+        ty: 'rc',
+        nm: 'Rectangle',
+        d: 1,
+        p: { a: 0, k: [0, 0] },
+        s: { a: 0, k: [w, h] },
+        r: { a: 0, k: layer.cornerRadius },
+      },
+    ]
   }
+  // path: one Lottie shape per contour, geometry already relative to center
+  return (layer.path ?? []).map((sp, i) => ({
+    ty: 'sh',
+    nm: `Path ${i + 1}`,
+    ind: i,
+    ks: { a: 0, k: { c: sp.closed, v: sp.v, i: sp.i, o: sp.o } },
+  }))
 }
 
 function buildLayer(layer: Layer, index: number, op: number) {
-  const fillColor = buildProp(layer.fillColor, 'color')
+  const items: object[] = [...buildShapeItems(layer)]
+  // paint order: fill underneath, stroke on top, then the group transform
+  if (layer.fillEnabled !== false) {
+    items.push({
+      ty: 'fl',
+      nm: 'Fill',
+      c: buildProp(layer.fillColor, 'color'),
+      o: { a: 0, k: 100 },
+      r: 1,
+      bm: 0,
+    })
+  }
+  if (layer.stroke) {
+    items.push({
+      ty: 'st',
+      nm: 'Stroke',
+      c: { a: 0, k: [layer.stroke.color[0], layer.stroke.color[1], layer.stroke.color[2], 1] },
+      o: { a: 0, k: 100 },
+      w: { a: 0, k: layer.stroke.width },
+      lc: 2,
+      lj: 2,
+      ml: 4,
+      bm: 0,
+    })
+  }
+  items.push({
+    ty: 'tr',
+    p: { a: 0, k: [0, 0] },
+    a: { a: 0, k: [0, 0] },
+    s: { a: 0, k: [100, 100] },
+    r: { a: 0, k: 0 },
+    o: { a: 0, k: 100 },
+  })
+
   return {
     ddd: 0,
     ind: index + 1,
@@ -94,24 +133,7 @@ function buildLayer(layer: Layer, index: number, op: number) {
       s: buildProp(layer.scale, 'scale'),
     },
     ao: 0,
-    shapes: [
-      {
-        ty: 'gr',
-        nm: 'Group',
-        it: [
-          buildShapeItem(layer),
-          { ty: 'fl', nm: 'Fill', c: fillColor, o: { a: 0, k: 100 }, r: 1, bm: 0 },
-          {
-            ty: 'tr',
-            p: { a: 0, k: [0, 0] },
-            a: { a: 0, k: [0, 0] },
-            s: { a: 0, k: [100, 100] },
-            r: { a: 0, k: 0 },
-            o: { a: 0, k: 100 },
-          },
-        ],
-      },
-    ],
+    shapes: [{ ty: 'gr', nm: 'Group', it: items }],
     ip: 0,
     op,
     st: 0,

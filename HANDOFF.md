@@ -76,3 +76,27 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
 ### Następne kroki (UI/ficzery)
 - Można ruszyć z funkcjami z roadmapy (import Lottie / kształty / timeline power-features).
 - Drobiazgi do rozważenia: resizable panele, ikona „Fade Out" (sunset) czyta się trochę jak upload.
+
+## Sesja: 2026-06-12 (resizable panele + import SVG per-element)
+
+### Zrobione
+- **Resizable panele** (`App.tsx`): przeciągane krawędzie lewego/prawego panelu i wysokości
+  timeline, zapis w localStorage; splitter podświetla akcent. Min szer. inspektora podniesiona,
+  pola liczbowe odchudzone — 3-cyfrowe wartości nie obcinają się (zweryfikowane pomiarem).
+- **Import SVG → natywne warstwy (per-element)** — wybrana opcja B:
+  - `core/svgImport.ts` — DOMParser + `svgpath` (arki→cubic, shorthand, transformy przez
+    `.transform()`); każdy `<path/rect/circle/ellipse/line/poly*>` → osobna **warstwa** z geometrią
+    beziera względem środka bboxa. Grupy `<g>` i transformy spłaszczane, fill/stroke/opacity
+    dziedziczone, kolory hex/rgb/named. Całość dopasowana i wyśrodkowana w kompozycji.
+  - Model: `ShapeType += 'path'`, `Layer.path?: SubPath[]`, `Layer.stroke?`, `Layer.fillEnabled?`.
+  - `builder.ts`: emisja `sh` per kontur + warunkowy fill + `st` (stroke).
+  - `factory.createPathLayer`, store: `addLayers`, `setFillEnabled/StrokeColor/StrokeWidth`.
+  - Toolbar: przycisk **Import SVG**. Inspektor: dla `path` chowa W/H/R, pokazuje Fill (z toggle)
+    + Stroke (kolor + grubość). Każdy element ma własny transform + presety.
+  - Zależność: `svgpath`. Limity v1: bez gradientów/CSS-klas/`<text>`/`<use>`/`<image>` (pomijane,
+    z ostrzeżeniem); fill-opacity uproszczone do opacity warstwy.
+- `tsc --noEmit` czysto, `vite build` OK; przetestowane headless (4 warstwy z testowego SVG, render OK).
+
+### Następne kroki
+- Rozbudowa presetów: wszystkie rodziny (Wejścia/Wyjścia/Emphasis/Pętle) + **filtr segmentowy**
+  w panelu + rozszerzony zestaw easingów (smooth + lekki overshoot „back"). ← następne w kolejce.

@@ -1,4 +1,4 @@
-import type { Composition, Layer, Property, ShapeType, Vec2 } from './model'
+import type { Composition, Layer, Property, ShapeType, Stroke, SubPath, Vec2 } from './model'
 
 // ---------------------------------------------------------------------------
 // Factories + small helpers for creating model objects and converting colors.
@@ -39,6 +39,34 @@ export function createLayer(shape: ShapeType, comp: Composition): Layer {
     rotation: staticProp([0]),
     opacity: staticProp([100]),
     fillColor: staticProp(hexToRgb(color)),
+  }
+}
+
+/** Build a path layer from imported geometry (already in comp pixel space). */
+export function createPathLayer(opts: {
+  name: string
+  subpaths: SubPath[]
+  center: Vec2
+  size: Vec2
+  fill: number[] | null
+  stroke: Stroke | null
+  opacity: number // 0..100
+}): Layer {
+  return {
+    id: uid('layer'),
+    name: opts.name,
+    shape: 'path',
+    size: [Math.max(1, opts.size[0]), Math.max(1, opts.size[1])],
+    cornerRadius: 0,
+    visible: true,
+    path: opts.subpaths,
+    fillEnabled: opts.fill != null,
+    stroke: opts.stroke,
+    position: staticProp([opts.center[0], opts.center[1]]),
+    scale: staticProp([100, 100]),
+    rotation: staticProp([0]),
+    opacity: staticProp([Math.max(0, Math.min(100, opts.opacity))]),
+    fillColor: staticProp(opts.fill ?? opts.stroke?.color ?? [0.1, 0.1, 0.12]),
   }
 }
 

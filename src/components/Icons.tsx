@@ -40,6 +40,7 @@ export type IconName =
   | 'arrow-down'
   | 'rotate'
   | 'activity'
+  | 'image'
 
 const PATHS: Record<IconName, JSX.Element> = {
   'file-plus': (
@@ -198,6 +199,13 @@ const PATHS: Record<IconName, JSX.Element> = {
     </>
   ),
   activity: <polyline points="3 12 7 12 10 4 14 20 17 12 21 12" />,
+  image: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="M21 15l-5-5L5 21" />
+    </>
+  ),
 }
 
 export function Icon({
