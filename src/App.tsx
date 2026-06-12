@@ -5,6 +5,7 @@ import { Stage } from './components/Stage'
 import { LayerPanel } from './components/LayerPanel'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { Timeline } from './components/Timeline'
+import { Preview } from './components/Preview'
 
 // Persisted, drag-resizable layout sizes (panel widths + timeline height).
 const LAYOUT_KEY = 'lottie-studio:layout'
@@ -137,6 +138,7 @@ export default function App() {
       </main>
       <div className="splitter row" onPointerDown={startResize('timeline', 'y', -1)} title="Drag to resize" />
       <Timeline />
+      <Preview />
     </div>
   )
 }

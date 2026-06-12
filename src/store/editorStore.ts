@@ -33,6 +33,7 @@ interface EditorState {
   playhead: number
   playing: boolean
   autoKey: boolean
+  previewOpen: boolean
   past: Composition[]
   future: Composition[]
   interactiveBase: Composition | null
@@ -43,6 +44,7 @@ interface EditorState {
   setPlaying: (playing: boolean) => void
   togglePlaying: () => void
   toggleAutoKey: () => void
+  setPreview: (open: boolean) => void
   selectLayer: (id: string | null) => void
   toggleSelect: (id: string) => void
   selectLayers: (ids: string[]) => void
@@ -154,6 +156,7 @@ export const useEditor = create<EditorState>((set, get) => {
     playhead: 0,
     playing: false,
     autoKey: true,
+    previewOpen: false,
     past: [],
     future: [],
     interactiveBase: null,
@@ -174,6 +177,7 @@ export const useEditor = create<EditorState>((set, get) => {
     setPlaying: (playing) => set({ playing }),
     togglePlaying: () => set((s) => ({ playing: !s.playing })),
     toggleAutoKey: () => set((s) => ({ autoKey: !s.autoKey })),
+    setPreview: (open) => set({ previewOpen: open, playing: false }),
     selectLayer: (id) =>
       set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [], selectedKeyframe: null }),
     toggleSelect: (id) =>

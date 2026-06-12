@@ -41,6 +41,7 @@ export function Toolbar() {
   const newProject = useEditor((s) => s.newProject)
   const loadComposition = useEditor((s) => s.loadComposition)
   const addLayers = useEditor((s) => s.addLayers)
+  const setPreview = useEditor((s) => s.setPreview)
 
   const fileRef = useRef<HTMLInputElement>(null)
   const svgRef = useRef<HTMLInputElement>(null)
@@ -98,6 +99,9 @@ export function Toolbar() {
         </button>
         <button onClick={saveProject} title="Save project (.lottiestudio.json)">
           <Icon name="save" /> Save
+        </button>
+        <button onClick={() => setPreview(true)} title="Full preview (loops, no editor UI)">
+          <Icon name="play" /> Preview
         </button>
         <button className="primary" onClick={exportLottie} title="Export Lottie JSON">
           <Icon name="download" /> Export Lottie

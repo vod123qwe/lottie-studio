@@ -121,6 +121,17 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
 - `factory.createSolidLayer`; pasek kategorii przerobiony na przewijane chipy `.cat-tabs` (7 kategorii).
 - Następne etapy: animowane ścieżki → Flag/Wave (kat. Path), potem Morph; potem multi-select; preview.
 
+## Sesja: 2026-06-12 (animowane ścieżki, morph, multi-select, preview)
+- **Animowane ścieżki**: `Layer.pathKeyframes`, builder emituje animowany `sh` per kontur.
+  Preset **Flag Wave** (kat. Path) — falowanie ścieżki (traveling wave, zakotwiczone z lewej).
+- **Morph** (`core/pathSample.ts`): resampling konturu do N punktów (arc-length) + ringi prymitywów;
+  presety Morph → Circle/Square/Triangle/Star (shape↔target, pętla).
+- **Multi-select** na artboardzie: `selectedLayerIds` (+ primary), shift/ctrl-klik, marquee, drag całej
+  selekcji razem, Delete usuwa wszystkie, presety przez `applyPresetToSelected` na całą selekcję.
+- **Preview mode** (`Preview.tsx`): pełny modal, zapętlone odtwarzanie, transport, tła
+  (transparent/light/dark/canvas), Esc/klik-tło zamyka, Spacja play/pause.
+- Wszystko: `tsc` czysto, build OK, zweryfikowane headless. Cała lista życzeń usera zrobiona.
+
 ## Sesja: 2026-06-12 (zoom timeline)
 - **Timeline zoom 1×–24×** (`Timeline.tsx`): sticky etykiety, scroll poziomy, kontrolki −/suwak/+/fit
   + readout, Ctrl/Cmd+scroll z kotwiczeniem na kursorze. Zweryfikowane (ticks 19→91, content rośnie).
