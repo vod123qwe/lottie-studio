@@ -50,6 +50,9 @@ export type IconName =
   | 'minus'
   | 'wind'
   | 'blend'
+  | 'layers'
+  | 'sliders'
+  | 'film'
 
 const PATHS: Record<IconName, JSX.Element> = {
   'file-plus': (
@@ -254,6 +257,35 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <circle cx="9" cy="9" r="6" />
       <circle cx="15" cy="15" r="6" />
+    </>
+  ),
+  layers: (
+    <>
+      <path d="M12 2 21 7l-9 5-9-5 9-5z" />
+      <path d="M3 12l9 5 9-5" />
+      <path d="M3 17l9 5 9-5" />
+    </>
+  ),
+  sliders: (
+    <>
+      <line x1="4" y1="21" x2="4" y2="14" />
+      <line x1="4" y1="10" x2="4" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="20" y1="21" x2="20" y2="16" />
+      <line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="1" y1="14" x2="7" y2="14" />
+      <line x1="9" y1="8" x2="15" y2="8" />
+      <line x1="17" y1="16" x2="23" y2="16" />
+    </>
+  ),
+  film: (
+    <>
+      <rect x="2" y="3" width="20" height="18" rx="2" />
+      <line x1="7" y1="3" x2="7" y2="21" />
+      <line x1="17" y1="3" x2="17" y2="21" />
+      <line x1="2" y1="9" x2="22" y2="9" />
+      <line x1="2" y1="15" x2="22" y2="15" />
     </>
   ),
   move: (

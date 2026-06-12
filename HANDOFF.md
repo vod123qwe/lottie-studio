@@ -130,7 +130,12 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
-- TODO (prośba usera): wariant mobilny — responsywny układ po breakpoincie, wygodny na telefonie.
+## Sesja: 2026-06-12 (wariant mobilny)
+- Breakpoint **≤820px** → osobny układ (`useIsMobile` w `App.tsx`): scena na pełną szerokość,
+  przewijalny w poziomie toolbar, dolny pasek zakładek **Layers / Design / Animate** otwierający
+  panel jako bottom-sheet (46vh; ponowny tap zwija → scena na pełno). Dotyk działa (pointer events).
+- Reużywa LayerPanel/PropertiesPanel/Timeline/Stage; nowe ikony layers/sliders/film. Zweryfikowane
+  na viewportcie 390×844 (zakładki przełączają, sheet zwija, brak błędów).
 
 ## Sesja: 2026-06-12 (animowane ścieżki, morph, multi-select, preview)
 - **Animowane ścieżki**: `Layer.pathKeyframes`, builder emituje animowany `sh` per kontur.

@@ -1145,3 +1145,81 @@ input[type='number']::-webkit-inner-spin-button {
   border: 5px solid transparent;
   border-top: 7px solid var(--coral);
 }
+
+/* ---- mobile shell ------------------------------------------------------ */
+.app.mobile {
+  height: 100vh;
+  height: 100dvh;
+}
+.app.mobile .toolbar {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px 10px;
+  scrollbar-width: none;
+}
+.app.mobile .toolbar::-webkit-scrollbar {
+  display: none;
+}
+.app.mobile .toolbar .brand,
+.app.mobile .tool-sep {
+  display: none;
+}
+.app.mobile .toolbar button {
+  flex: 0 0 auto;
+}
+.app.mobile .group.right {
+  margin-left: 0;
+}
+.app.mobile .frame-readout {
+  flex: 0 0 auto;
+}
+.m-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.m-stage .stage {
+  flex: 1;
+}
+.m-sheet {
+  height: 46vh;
+  flex: 0 0 auto;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px rgba(17, 24, 39, 0.08);
+  overflow: auto;
+}
+.m-sheet .panel {
+  border: none;
+  height: 100%;
+}
+.m-sheet .timeline {
+  height: 100%;
+}
+.m-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.m-tabs button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 4px;
+  border: none;
+  background: none;
+  border-radius: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.m-tabs button.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}

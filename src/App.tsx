@@ -6,6 +6,24 @@ import { LayerPanel } from './components/LayerPanel'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { Timeline } from './components/Timeline'
 import { Preview } from './components/Preview'
+import { Icon } from './components/Icons'
+
+// Mobile shell kicks in below this width.
+function useIsMobile() {
+  const query = '(max-width: 820px)'
+  const [mobile, setMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const on = () => setMobile(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return mobile
+}
+
+type MobileTab = 'layers' | 'props' | 'timeline'
 
 // Persisted, drag-resizable layout sizes (panel widths + timeline height).
 const LAYOUT_KEY = 'lottie-studio:layout'
@@ -32,6 +50,8 @@ function loadLayout(): Layout {
 export default function App() {
   const playing = useEditor((s) => s.playing)
   const [layout, setLayout] = useState(loadLayout)
+  const isMobile = useIsMobile()
+  const [mtab, setMtab] = useState<MobileTab | null>('props')
 
   // persist layout whenever it settles
   useEffect(() => {
@@ -122,6 +142,40 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  if (isMobile) {
+    const toggle = (t: MobileTab) => setMtab((cur) => (cur === t ? null : t))
+    return (
+      <div className="app mobile">
+        <Toolbar />
+        <div className="m-stage">
+          <Stage />
+        </div>
+        {mtab && (
+          <div className="m-sheet">
+            {mtab === 'layers' && <LayerPanel />}
+            {mtab === 'props' && <PropertiesPanel />}
+            {mtab === 'timeline' && <Timeline />}
+          </div>
+        )}
+        <nav className="m-tabs">
+          <button className={mtab === 'layers' ? 'active' : ''} onClick={() => toggle('layers')}>
+            <Icon name="layers" />
+            <span>Layers</span>
+          </button>
+          <button className={mtab === 'props' ? 'active' : ''} onClick={() => toggle('props')}>
+            <Icon name="sliders" />
+            <span>Design</span>
+          </button>
+          <button className={mtab === 'timeline' ? 'active' : ''} onClick={() => toggle('timeline')}>
+            <Icon name="film" />
+            <span>Animate</span>
+          </button>
+        </nav>
+        <Preview />
+      </div>
+    )
+  }
 
   return (
     <div className="app" style={{ ['--timeline-h' as string]: `${layout.timeline}px` }}>
