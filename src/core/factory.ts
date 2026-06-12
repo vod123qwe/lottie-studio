@@ -49,7 +49,7 @@ export function createComposition(): Composition {
     h: 512,
     fr: 30,
     duration: 90,
-    bg: '#15171c',
+    bg: '#ffffff',
     layers: [],
   }
 }

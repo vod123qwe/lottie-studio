@@ -1,5 +1,6 @@
 import { useEditor } from '../store/editorStore'
 import { rgbToHex } from '../core/factory'
+import { Icon } from './Icons'
 
 // ---------------------------------------------------------------------------
 // Layer list. Top of the list = top of the stack (renders in front), matching
@@ -18,7 +19,10 @@ export function LayerPanel() {
 
   return (
     <section className="panel layers-panel">
-      <div className="panel-head">Layers</div>
+      <div className="panel-head">
+        Layers
+        {layers.length > 0 && <span className="muted">{layers.length}</span>}
+      </div>
       <div className="layer-list">
         {layers.length === 0 && (
           <p className="empty">No layers yet. Add a Rectangle or Ellipse from the toolbar.</p>
@@ -26,7 +30,11 @@ export function LayerPanel() {
         {layers.map((l, i) => (
           <div
             key={l.id}
-            className={'layer-row' + (l.id === selectedId ? ' selected' : '')}
+            className={
+              'layer-row' +
+              (l.id === selectedId ? ' selected' : '') +
+              (l.visible ? '' : ' hidden')
+            }
             onPointerDown={() => selectLayer(l.id)}
           >
             <button
@@ -37,7 +45,7 @@ export function LayerPanel() {
                 toggleVisible(l.id)
               }}
             >
-              {l.visible ? '👁' : '–'}
+              <Icon name={l.visible ? 'eye' : 'eye-off'} size={15} />
             </button>
             <span className="swatch" style={{ background: rgbToHex(l.fillColor.value) }} />
             <input
@@ -48,6 +56,7 @@ export function LayerPanel() {
             />
             <div className="layer-actions">
               <button
+                className="icon-btn"
                 title="Move up"
                 disabled={i === 0}
                 onPointerDown={(e) => {
@@ -55,9 +64,10 @@ export function LayerPanel() {
                   reorderLayer(l.id, -1)
                 }}
               >
-                ↑
+                <Icon name="chevron-up" size={15} />
               </button>
               <button
+                className="icon-btn"
                 title="Move down"
                 disabled={i === layers.length - 1}
                 onPointerDown={(e) => {
@@ -65,26 +75,27 @@ export function LayerPanel() {
                   reorderLayer(l.id, 1)
                 }}
               >
-                ↓
+                <Icon name="chevron-down" size={15} />
               </button>
               <button
+                className="icon-btn"
                 title="Duplicate"
                 onPointerDown={(e) => {
                   e.stopPropagation()
                   duplicateLayer(l.id)
                 }}
               >
-                ⧉
+                <Icon name="copy" size={15} />
               </button>
               <button
-                className="danger"
+                className="icon-btn danger"
                 title="Delete"
                 onPointerDown={(e) => {
                   e.stopPropagation()
                   deleteLayer(l.id)
                 }}
               >
-                ✕
+                <Icon name="trash" size={15} />
               </button>
             </div>
           </div>

@@ -1,16 +1,61 @@
+import { useState, type ReactNode } from 'react'
 import { useEditor, useSelectedLayer } from '../store/editorStore'
 import { evalProperty } from '../core/interpolate'
 import { hexToRgb, rgbToHex } from '../core/factory'
-import { EASINGS, type PropKind, type Property } from '../core/model'
+import { EASINGS, type Easing, type PropKind, type Property } from '../core/model'
 import { PRESETS } from '../core/presets'
+import { Icon, type IconName } from './Icons'
 
 // ---------------------------------------------------------------------------
 // Inspector: composition settings on top, then the selected layer's shape,
 // fill, animatable transform properties (each with a keyframe toggle + add),
-// and one-click animation presets.
+// and one-click animation presets. Sections collapse like Arcade's inspector.
 // ---------------------------------------------------------------------------
 
 const round = (n: number) => Math.round(n * 100) / 100
+
+const EASING_LABELS: Record<Easing, string> = {
+  linear: 'Linear',
+  easeIn: 'In',
+  easeOut: 'Out',
+  easeInOut: 'In·Out',
+}
+
+const PRESET_ICONS: Record<string, IconName> = {
+  fadeIn: 'sun',
+  fadeOut: 'sunset',
+  popIn: 'sparkles',
+  slideInLeft: 'arrow-left',
+  slideInRight: 'arrow-right',
+  spin: 'rotate',
+  pulse: 'activity',
+  dropIn: 'arrow-down',
+}
+
+/** Collapsible inspector section with a chevron header. */
+function Section({
+  title,
+  sub,
+  defaultOpen = true,
+  children,
+}: {
+  title: string
+  sub?: string
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className={'prop-group' + (open ? '' : ' collapsed')}>
+      <button className={'section-head' + (open ? '' : ' collapsed')} onClick={() => setOpen((v) => !v)}>
+        <Icon name="chevron-down" size={14} className="chev" />
+        <span className="title">{title}</span>
+        {sub && <span className="sub">{sub}</span>}
+      </button>
+      {open && children}
+    </div>
+  )
+}
 
 function NumField(props: {
   label: string
@@ -37,8 +82,7 @@ function CompSettings() {
   const comp = useEditor((s) => s.comp)
   const setComp = useEditor((s) => s.setComp)
   return (
-    <div className="prop-group">
-      <div className="panel-head">Composition</div>
+    <Section title="Composition">
       <label className="text-field">
         <span>Name</span>
         <input value={comp.name} onChange={(e) => setComp({ name: e.target.value })} />
@@ -56,7 +100,7 @@ function CompSettings() {
         <input type="color" value={comp.bg} onChange={(e) => setComp({ bg: e.target.value })} />
         <em>preview only</em>
       </label>
-    </div>
+    </Section>
   )
 }
 
@@ -73,14 +117,14 @@ function PropControls({ layerId, kind, prop }: { layerId: string; kind: PropKind
         title={prop.animated ? 'Stop animating (bake current value)' : 'Animate this property'}
         onClick={() => toggleAnimated(layerId, kind)}
       >
-        ⏱
+        <Icon name="clock" size={15} />
       </button>
       <button
         className={'kf-add' + (hasKfHere ? ' filled' : '')}
         title="Add / update keyframe at playhead"
         onClick={() => addKeyframe(layerId, kind)}
       >
-        ◆
+        <Icon name="diamond" size={14} />
       </button>
     </div>
   )
@@ -89,16 +133,16 @@ function PropControls({ layerId, kind, prop }: { layerId: string; kind: PropKind
 function Presets({ layerId }: { layerId: string }) {
   const applyPreset = useEditor((s) => s.applyPreset)
   return (
-    <div className="prop-group">
-      <div className="panel-head">Presets</div>
+    <Section title="Presets">
       <div className="preset-grid">
         {PRESETS.map((p) => (
           <button key={p.id} className="preset" title={p.hint} onClick={() => applyPreset(layerId, p.id)}>
+            <Icon name={PRESET_ICONS[p.id] ?? 'sparkles'} size={15} />
             {p.name}
           </button>
         ))}
       </div>
-    </div>
+    </Section>
   )
 }
 
@@ -111,23 +155,24 @@ function KeyframeEasing() {
   const kf = layer?.[ref.prop].keyframes.find((k) => k.id === ref.kfId)
   if (!kf) return null
   return (
-    <div className="prop-group">
-      <div className="panel-head">Selected keyframe</div>
-      <label className="text-field">
-        <span>Easing</span>
-        <select
-          value={kf.easing}
-          onChange={(e) => setKeyframeEasing(ref.layerId, ref.prop, ref.kfId, e.target.value as never)}
-        >
+    <Section title="Selected keyframe" sub={`frame ${kf.t}`}>
+      <div className="row" style={{ flexDirection: 'column', gap: 6 }}>
+        <span className="muted" style={{ fontWeight: 500 }}>Easing</span>
+        <div className="seg" style={{ width: '100%' }}>
           {EASINGS.map((e) => (
-            <option key={e} value={e}>
-              {e}
-            </option>
+            <button
+              key={e}
+              className={e === kf.easing ? 'active' : ''}
+              style={{ flex: 1 }}
+              onClick={() => setKeyframeEasing(ref.layerId, ref.prop, ref.kfId, e)}
+            >
+              {EASING_LABELS[e]}
+            </button>
           ))}
-        </select>
-      </label>
-      <p className="hint">Easing applies to the segment leaving this keyframe (frame {kf.t}).</p>
-    </div>
+        </div>
+      </div>
+      <p className="hint">Easing applies to the segment leaving this keyframe.</p>
+    </Section>
   )
 }
 
@@ -146,8 +191,7 @@ export function PropertiesPanel() {
 
       {layer && (
         <>
-          <div className="prop-group">
-            <div className="panel-head">Shape · {layer.shape}</div>
+          <Section title="Shape" sub={layer.shape === 'rect' ? 'rectangle' : 'ellipse'}>
             <div className="row">
               <NumField
                 label="W"
@@ -163,12 +207,15 @@ export function PropertiesPanel() {
               />
             </div>
             {layer.shape === 'rect' && (
-              <NumField
-                label="Radius"
-                value={layer.cornerRadius}
-                min={0}
-                onCommit={(r) => setCornerRadius(layer.id, r)}
-              />
+              <div className="row">
+                <NumField
+                  label="R"
+                  value={layer.cornerRadius}
+                  min={0}
+                  onCommit={(r) => setCornerRadius(layer.id, r)}
+                />
+                <div className="num" style={{ visibility: 'hidden' }} />
+              </div>
             )}
             <label className="color-field">
               <span>Fill</span>
@@ -179,11 +226,9 @@ export function PropertiesPanel() {
               />
               <PropControls layerId={layer.id} kind="fillColor" prop={layer.fillColor} />
             </label>
-          </div>
+          </Section>
 
-          <div className="prop-group">
-            <div className="panel-head">Transform</div>
-
+          <Section title="Transform">
             <div className="prop-row">
               <PropControls layerId={layer.id} kind="position" prop={layer.position} />
               <span className="prop-label">Position</span>
@@ -252,7 +297,7 @@ export function PropertiesPanel() {
                 />
               </div>
             </div>
-          </div>
+          </Section>
 
           <Presets layerId={layer.id} />
         </>

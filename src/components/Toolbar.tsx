@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useEditor } from '../store/editorStore'
 import { exportLottieString } from '../core/builder'
 import type { Composition } from '../core/model'
+import { Icon } from './Icons'
 
 // ---------------------------------------------------------------------------
 // Top bar: file actions, shape creation, transport controls, undo/redo.
@@ -69,33 +70,55 @@ export function Toolbar() {
         Lottie Studio
       </div>
 
+      <span className="tool-sep" />
+
       <div className="group">
-        <button onClick={newProject} title="New project">New</button>
-        <button onClick={() => fileRef.current?.click()} title="Open project">Open</button>
-        <button onClick={saveProject} title="Save project (.lottiestudio.json)">Save</button>
+        <button onClick={newProject} title="New project">
+          <Icon name="file-plus" /> New
+        </button>
+        <button onClick={() => fileRef.current?.click()} title="Open project">
+          <Icon name="folder-open" /> Open
+        </button>
+        <button onClick={saveProject} title="Save project (.lottiestudio.json)">
+          <Icon name="save" /> Save
+        </button>
         <button className="primary" onClick={exportLottie} title="Export Lottie JSON">
-          Export Lottie
+          <Icon name="download" /> Export Lottie
         </button>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={openProject} />
       </div>
 
+      <span className="tool-sep" />
+
       <div className="group">
-        <button onClick={() => addLayer('rect')}>+ Rectangle</button>
-        <button onClick={() => addLayer('ellipse')}>+ Ellipse</button>
+        <button onClick={() => addLayer('rect')}>
+          <Icon name="square" /> Rectangle
+        </button>
+        <button onClick={() => addLayer('ellipse')}>
+          <Icon name="circle" /> Ellipse
+        </button>
       </div>
 
       <div className="group transport">
-        <button onClick={() => setPlayhead(0)} title="Go to start">⏮</button>
-        <button onClick={() => step(-1)} title="Previous frame">◀</button>
-        <button className="play" onClick={togglePlaying} title="Play / pause (space)">
-          {playing ? '❚❚' : '▶'}
+        <button className="icon-btn" onClick={() => setPlayhead(0)} title="Go to start">
+          <Icon name="skip-back" />
         </button>
-        <button onClick={() => step(1)} title="Next frame">▶</button>
-        <button onClick={() => setPlayhead(comp.duration)} title="Go to end">⏭</button>
-        <span className="frame-readout">
-          {Math.round(playhead)} <span className="muted">/ {comp.duration}</span>
-        </span>
+        <button className="icon-btn" onClick={() => step(-1)} title="Previous frame">
+          <Icon name="chevron-left" />
+        </button>
+        <button className="icon-btn play" onClick={togglePlaying} title="Play / pause (space)">
+          <Icon name={playing ? 'pause' : 'play'} />
+        </button>
+        <button className="icon-btn" onClick={() => step(1)} title="Next frame">
+          <Icon name="chevron-right" />
+        </button>
+        <button className="icon-btn" onClick={() => setPlayhead(comp.duration)} title="Go to end">
+          <Icon name="skip-forward" />
+        </button>
       </div>
+      <span className="frame-readout">
+        {Math.round(playhead)} <span className="muted">/ {comp.duration}</span>
+      </span>
 
       <div className="group right">
         <button
@@ -103,10 +126,15 @@ export function Toolbar() {
           onClick={toggleAutoKey}
           title="Auto-keyframe: record edits as keyframes when a property is animated"
         >
-          ● Auto-key
+          <span className="rec-dot" /> Auto-key
         </button>
-        <button onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">↶</button>
-        <button onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">↷</button>
+        <span className="tool-sep" />
+        <button className="icon-btn bordered" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
+          <Icon name="undo" />
+        </button>
+        <button className="icon-btn bordered" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
+          <Icon name="redo" />
+        </button>
       </div>
     </header>
   )

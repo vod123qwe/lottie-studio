@@ -8,6 +8,7 @@ import {
   type Layer,
   type PropKind,
 } from '../core/model'
+import { Icon } from './Icons'
 
 // ---------------------------------------------------------------------------
 // Timeline: a scrubbable ruler plus one row per layer. The selected layer
@@ -119,7 +120,13 @@ export function Timeline() {
   }
 
   return (
-    <section className="panel timeline" style={{ ['--gutter' as string]: `${GUTTER}px` }}>
+    <section
+      className="panel timeline"
+      style={{
+        ['--gutter' as string]: `${GUTTER}px`,
+        ['--grid' as string]: `${Math.max(1, step * pxPerFrame)}px`,
+      }}
+    >
       <div className="tl-body">
         {/* ruler */}
         <div className="tl-row ruler-row">
@@ -154,7 +161,7 @@ export function Timeline() {
             <div key={layer.id} className="tl-layer-block">
               <div className={'tl-row layer' + (expanded ? ' expanded' : '')}>
                 <div className="tl-label" onPointerDown={() => selectLayer(layer.id)}>
-                  <span className="caret">{expanded ? '▾' : '▸'}</span>
+                  <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={13} className="caret" />
                   {layer.name}
                 </div>
                 <div

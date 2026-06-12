@@ -49,3 +49,30 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
 - [ ] Więcej kształtów: pen/path tool, polygon/star, tekst.
 - [ ] Spatial bezier dla pozycji (krzywe ruchu), motion blur.
 - [ ] Color picker keyframe na timeline, copy/paste keyframe'ów.
+
+## Sesja: 2026-06-12 (redesign UI — jasny motyw „Arcade")
+
+### Decyzje
+- **Kierunek:** polish UI/UX. Inspiracja: Arcade (czysty jasny SaaS).
+- **Motyw:** pełny **light** (białe/szare panele, hairline ramki, miękkie low-opacity cienie).
+- **Akcent:** kobaltowy `#2F5BF6` (primary, aktywne stany), koralowy `#F5365C` na playhead + kropkę w logo.
+- **Typografia:** Inter (Google Fonts). **Ikony:** line-style SVG zamiast emoji.
+
+### Co zrobione (zweryfikowane na zbudowanej wersji, screenshoty)
+- Nowy system designu w `src/index.css`: tokeny kolorów/odstępów/promieni/cieni, kontrolki
+  (primary/ghost/icon-btn, toggle `.switch`, segmented `.seg`, `.num` z jednostką w polu).
+- `src/components/Icons.tsx` — jeden komponent `<Icon name=… />`, ~30 ikon (toolbar, panele, presety).
+- Toolbar: ikony + separatory, primary „Export Lottie", Auto-key jako pill z rec-dotem.
+- LayerPanel: ikony (eye/eye-off, reorder, duplicate, trash), stan „hidden", licznik warstw.
+- PropertiesPanel: **zwijane sekcje** (Composition/Shape/Transform/Presets/Selected keyframe),
+  easing jako **segmented** (Linear/In/Out/In·Out), presety z ikonami.
+- Timeline: caret-ikona, subtelna pionowa siatka zsynchronizowana z linijką, koralowy playhead z grotem,
+  niebieskie romby keyframe (zaznaczony = pusty z ringiem).
+- Stage: jasne tło z delikatnym gradientem, artboard z miękkim cieniem + checkerboard transparencji.
+- `factory.ts`: domyślny `comp.bg` → `#ffffff` (pasuje do light). `index.html`: Inter + theme-color.
+  Favicon przerobiony na jasny (niebieski ring + koralowa kropka).
+- `tsc --noEmit` czysto, `vite build` OK.
+
+### Następne kroki (UI/ficzery)
+- Można ruszyć z funkcjami z roadmapy (import Lottie / kształty / timeline power-features).
+- Drobiazgi do rozważenia: resizable panele, ikona „Fade Out" (sunset) czyta się trochę jak upload.
