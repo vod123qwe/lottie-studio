@@ -24,7 +24,7 @@
     "build": "npm run build"
   },
   "links": {
-    "repo": "",
+    "repo": "https://github.com/vod123qwe/lottie-studio",
     "live": ""
   },
   "icon": "sparkles",
