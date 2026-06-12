@@ -29,7 +29,8 @@ interface EditorState {
   comp: Composition
   selectedLayerId: string | null // "primary" selection (drives the inspector)
   selectedLayerIds: string[] // full multi-selection (includes the primary)
-  selectedKeyframe: KeyframeRef | null
+  selectedKeyframe: KeyframeRef | null // primary keyframe (drives easing UI)
+  selectedKeyframes: KeyframeRef[] // full keyframe multi-selection
   playhead: number
   playing: boolean
   autoKey: boolean
@@ -50,6 +51,10 @@ interface EditorState {
   selectLayers: (ids: string[]) => void
   deleteSelected: () => void
   selectKeyframe: (ref: KeyframeRef | null) => void
+  toggleKeyframe: (ref: KeyframeRef) => void
+  selectKeyframes: (refs: KeyframeRef[]) => void
+  removeSelectedKeyframes: () => void
+  setKeyframeTimesLive: (updates: { layerId: string; prop: PropKind; kfId: string; t: number }[]) => void
 
   // composition
   setComp: (patch: Partial<Composition>) => void
@@ -153,6 +158,7 @@ export const useEditor = create<EditorState>((set, get) => {
     selectedLayerId: null,
     selectedLayerIds: [],
     selectedKeyframe: null,
+    selectedKeyframes: [],
     playhead: 0,
     playing: false,
     autoKey: true,
@@ -179,7 +185,7 @@ export const useEditor = create<EditorState>((set, get) => {
     toggleAutoKey: () => set((s) => ({ autoKey: !s.autoKey })),
     setPreview: (open) => set({ previewOpen: open, playing: false }),
     selectLayer: (id) =>
-      set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [], selectedKeyframe: null }),
+      set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [], selectedKeyframe: null, selectedKeyframes: [] }),
     toggleSelect: (id) =>
       set((s) => {
         const has = s.selectedLayerIds.includes(id)
@@ -188,10 +194,11 @@ export const useEditor = create<EditorState>((set, get) => {
           selectedLayerIds: ids,
           selectedLayerId: has ? (ids[ids.length - 1] ?? null) : id,
           selectedKeyframe: null,
+          selectedKeyframes: [],
         }
       }),
     selectLayers: (ids) =>
-      set({ selectedLayerIds: ids, selectedLayerId: ids[ids.length - 1] ?? null, selectedKeyframe: null }),
+      set({ selectedLayerIds: ids, selectedLayerId: ids[ids.length - 1] ?? null, selectedKeyframe: null, selectedKeyframes: [] }),
     deleteSelected: () =>
       set((s) => {
         const kill = new Set(s.selectedLayerIds.length ? s.selectedLayerIds : s.selectedLayerId ? [s.selectedLayerId] : [])
@@ -205,9 +212,53 @@ export const useEditor = create<EditorState>((set, get) => {
           selectedLayerId: null,
           selectedLayerIds: [],
           selectedKeyframe: null,
+          selectedKeyframes: [],
         }
       }),
-    selectKeyframe: (ref) => set({ selectedKeyframe: ref }),
+    selectKeyframe: (ref) => set({ selectedKeyframe: ref, selectedKeyframes: ref ? [ref] : [] }),
+    toggleKeyframe: (ref) =>
+      set((s) => {
+        const eq = (a: KeyframeRef, b: KeyframeRef) => a.layerId === b.layerId && a.prop === b.prop && a.kfId === b.kfId
+        const has = s.selectedKeyframes.some((r) => eq(r, ref))
+        const refs = has ? s.selectedKeyframes.filter((r) => !eq(r, ref)) : [...s.selectedKeyframes, ref]
+        return { selectedKeyframes: refs, selectedKeyframe: has ? refs[refs.length - 1] ?? null : ref }
+      }),
+    selectKeyframes: (refs) => set({ selectedKeyframes: refs, selectedKeyframe: refs[refs.length - 1] ?? null }),
+    removeSelectedKeyframes: () => {
+      const refs = get().selectedKeyframes
+      if (!refs.length) return
+      withHistory((c) => {
+        for (const ref of refs) {
+          const l = findLayer(c, ref.layerId)
+          if (!l) continue
+          const p = l[ref.prop]
+          p.keyframes = p.keyframes.filter((k) => k.id !== ref.kfId)
+          if (p.keyframes.length === 0) p.animated = false
+        }
+      })
+      set({ selectedKeyframe: null, selectedKeyframes: [] })
+    },
+    setKeyframeTimesLive: (updates) => {
+      set((s) => {
+        const dur = s.comp.duration
+        const draft = clone(s.comp)
+        const touched = new Set<string>()
+        for (const u of updates) {
+          const l = draft.layers.find((x) => x.id === u.layerId)
+          const k = l?.[u.prop].keyframes.find((x) => x.id === u.kfId)
+          if (k) {
+            k.t = Math.max(0, Math.min(dur, Math.round(u.t)))
+            touched.add(`${u.layerId}::${u.prop}`)
+          }
+        }
+        for (const key of touched) {
+          const [lid, pr] = key.split('::')
+          const l = draft.layers.find((x) => x.id === lid)
+          l?.[pr as PropKind].keyframes.sort((a, b) => a.t - b.t)
+        }
+        return { comp: draft }
+      })
+    },
 
     // ---- composition ----------------------------------------------------
     setComp: (patch) =>
@@ -224,6 +275,7 @@ export const useEditor = create<EditorState>((set, get) => {
         selectedLayerId: null,
         selectedLayerIds: [],
         selectedKeyframe: null,
+        selectedKeyframes: [],
         playhead: 0,
         playing: false,
         past: [],
@@ -235,6 +287,7 @@ export const useEditor = create<EditorState>((set, get) => {
         selectedLayerId: null,
         selectedLayerIds: [],
         selectedKeyframe: null,
+        selectedKeyframes: [],
         playhead: 0,
         playing: false,
         past: [],
@@ -494,6 +547,7 @@ export const useEditor = create<EditorState>((set, get) => {
           selectedLayerIds: ids,
           selectedLayerId: present.has(s.selectedLayerId ?? '') ? s.selectedLayerId : ids[ids.length - 1] ?? null,
           selectedKeyframe: null,
+          selectedKeyframes: [],
         }
       }),
     redo: () =>
@@ -510,6 +564,7 @@ export const useEditor = create<EditorState>((set, get) => {
           selectedLayerIds: ids,
           selectedLayerId: present.has(s.selectedLayerId ?? '') ? s.selectedLayerId : ids[ids.length - 1] ?? null,
           selectedKeyframe: null,
+          selectedKeyframes: [],
         }
       }),
   }

@@ -123,10 +123,8 @@ export default function App() {
       } else if (e.key === 'ArrowRight') {
         st.step(1)
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        const k = st.selectedKeyframe
-        if (k) {
-          st.removeKeyframe(k.layerId, k.prop, k.kfId)
-          st.selectKeyframe(null)
+        if (st.selectedKeyframes.length) {
+          st.removeSelectedKeyframes()
         } else if (e.key === 'Delete' && (st.selectedLayerIds.length || st.selectedLayerId)) {
           st.deleteSelected()
         }

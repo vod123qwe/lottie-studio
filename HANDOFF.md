@@ -130,6 +130,17 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (multi-select keyframe'ów na timeline)
+- Store: `selectedKeyframes[]` (+ primary), `toggleKeyframe`, `selectKeyframes`,
+  `removeSelectedKeyframes`, `setKeyframeTimesLive` (live, re-sortuje dotknięte property).
+- Timeline jak na canvasie: shift-klik romba = toggle; **marquee** po ścieżkach property
+  zaznacza keyframe'y w prostokącie (po czasie i wierszach); klik (bez ruchu) = scrub.
+- Przeciąganie zaznaczonego romba rusza **całą grupą**. **Uchwyt zaznaczenia** (bracket) nad
+  wierszami z bokami **lewo/prawo do ściskania/rozciągania** czasu (skala wokół przeciwległej
+  krawędzi), środek = przesuń. Delete kasuje całą grupę. Jeden wpis undo na gest.
+- Zweryfikowane: Tada=14 kf, marquee→6, squeeze 520→375px, Delete 14→8; bracket wyrównany do
+  wierszy (delta 0–1px).
+
 ## Sesja: 2026-06-12 (chwytak playheada + biblioteka ikon)
 - **Playhead handle**: przeciągany koralowy „chwytak" z numerem klatki w linijce (sticky), pointer
   capture → scrub działa też dotykiem; usunięty stary trójkąt, linia 2px. Ruler 34px.
