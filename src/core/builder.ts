@@ -101,18 +101,54 @@ function buildShapeItems(layer: Layer): object[] {
   }))
 }
 
+/** Lottie gradient fill (gf) from a layer's static gradient + bbox. */
+function buildGradientFill(layer: Layer) {
+  const g = layer.gradient!
+  const [w, h] = layer.size
+  const stops = [...g.stops].sort((a, b) => a.offset - b.offset)
+  let s: number[]
+  let e: number[]
+  if (g.type === 'radial') {
+    s = [0, 0]
+    e = [w / 2, 0]
+  } else {
+    const a = ((g.angle ?? 0) * Math.PI) / 180
+    const hx = (Math.cos(a) * w) / 2
+    const hy = (Math.sin(a) * h) / 2
+    s = [-hx, -hy]
+    e = [hx, hy]
+  }
+  const colorPart = stops.flatMap((st) => [st.offset, st.color[0], st.color[1], st.color[2]])
+  const alphaPart = stops.flatMap((st) => [st.offset, st.opacity])
+  return {
+    ty: 'gf',
+    nm: 'Gradient',
+    t: g.type === 'radial' ? 2 : 1,
+    s: { a: 0, k: s },
+    e: { a: 0, k: e },
+    g: { p: stops.length, k: { a: 0, k: [...colorPart, ...alphaPart] } },
+    o: { a: 0, k: 100 },
+    r: 1,
+    bm: 0,
+  }
+}
+
 function buildLayer(layer: Layer, index: number, op: number) {
   const items: object[] = [...buildShapeItems(layer)]
   // paint order: fill underneath, stroke on top, then the group transform
   if (layer.fillEnabled !== false) {
-    items.push({
-      ty: 'fl',
-      nm: 'Fill',
-      c: buildProp(layer.fillColor, 'color'),
-      o: { a: 0, k: 100 },
-      r: 1,
-      bm: 0,
-    })
+    if (layer.gradient && layer.gradient.stops.length >= 2) {
+      items.push(buildGradientFill(layer))
+    } else {
+      items.push({
+        ty: 'fl',
+        nm: 'Fill',
+        c: buildProp(layer.fillColor, 'color'),
+        o: { a: 0, k: 100 },
+        r: 1,
+        bm: 0,
+      })
+    }
   }
   if (layer.stroke) {
     items.push({

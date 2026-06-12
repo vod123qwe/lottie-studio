@@ -76,6 +76,20 @@ export interface Stroke {
   width: number
 }
 
+/** A gradient fill stop. `offset` 0..1, `color` [r,g,b] 0..1, `opacity` 0..1. */
+export interface GradientStop {
+  offset: number
+  color: number[]
+  opacity: number
+}
+
+/** Static gradient fill (linear or radial). Overrides the solid fill color. */
+export interface Gradient {
+  type: 'linear' | 'radial'
+  angle: number // degrees (linear only)
+  stops: GradientStop[]
+}
+
 /** One frame of an animated path (flag wave, morph). All keyframes must share
  *  the same contour count and per-contour vertex count for Lottie to tween. */
 export interface PathKeyframe {
@@ -121,6 +135,7 @@ export interface Layer {
   pathKeyframes?: PathKeyframe[]
   // appearance extras
   fillEnabled?: boolean // undefined = filled (back-compat); false = no fill
+  gradient?: Gradient | null // when set, fills with a gradient instead of fillColor
   stroke?: Stroke | null
   // animatable transform + appearance
   position: Property

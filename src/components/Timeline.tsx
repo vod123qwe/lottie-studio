@@ -511,8 +511,8 @@ export function Timeline() {
           </div>
         )}
 
-        {/* playhead line spanning all tracks */}
-        <div className="playhead" style={{ left: GUTTER + playhead * pxPerFrame }} />
+        {/* playhead line spanning the tracks (starts below the ruler numbers) */}
+        <div className="playhead" style={{ left: GUTTER + playhead * pxPerFrame, top: RULER }} />
       </div>
 
       {/* bottom navigator — drag the window to pan, edges to zoom */}

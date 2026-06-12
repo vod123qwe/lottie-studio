@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type {
   Composition,
   Easing,
+  Gradient,
   Layer,
   Property,
   PropKind,
@@ -31,6 +32,7 @@ interface EditorState {
   selectedLayerIds: string[] // full multi-selection (includes the primary)
   selectedKeyframe: KeyframeRef | null // primary keyframe (drives easing UI)
   selectedKeyframes: KeyframeRef[] // full keyframe multi-selection
+  renameRequest: string | null // layer id whose name field should focus
   playhead: number
   playing: boolean
   autoKey: boolean
@@ -70,11 +72,14 @@ interface EditorState {
   renameLayer: (id: string, name: string) => void
   toggleVisible: (id: string) => void
   reorderLayer: (id: string, dir: -1 | 1) => void
+  moveLayerTo: (id: string, index: number) => void
+  requestRename: (id: string | null) => void
   setLayerSize: (id: string, size: [number, number]) => void
   setCornerRadius: (id: string, r: number) => void
   setFillEnabled: (id: string, enabled: boolean) => void
   setStrokeColor: (id: string, color: number[]) => void
   setStrokeWidth: (id: string, width: number) => void
+  setGradient: (id: string, gradient: Gradient | null) => void
   resetLayer: (id: string) => void
   openLayerMenu: (x: number, y: number, layerId: string) => void
   closeMenu: () => void
@@ -163,6 +168,7 @@ export const useEditor = create<EditorState>((set, get) => {
     selectedLayerIds: [],
     selectedKeyframe: null,
     selectedKeyframes: [],
+    renameRequest: null,
     playhead: 0,
     playing: false,
     autoKey: true,
@@ -359,6 +365,14 @@ export const useEditor = create<EditorState>((set, get) => {
         const [item] = c.layers.splice(idx, 1)
         c.layers.splice(next, 0, item)
       }),
+    moveLayerTo: (id, index) =>
+      withHistory((c) => {
+        const from = c.layers.findIndex((l) => l.id === id)
+        if (from < 0) return
+        const [item] = c.layers.splice(from, 1)
+        c.layers.splice(Math.max(0, Math.min(c.layers.length, index)), 0, item)
+      }),
+    requestRename: (id) => set({ renameRequest: id }),
     setLayerSize: (id, size) =>
       withHistory((c) => {
         const l = findLayer(c, id)
@@ -383,6 +397,11 @@ export const useEditor = create<EditorState>((set, get) => {
       withHistory((c) => {
         const l = findLayer(c, id)
         if (l && l.stroke) l.stroke = { ...l.stroke, width: Math.max(0, width) }
+      }),
+    setGradient: (id, gradient) =>
+      withHistory((c) => {
+        const l = findLayer(c, id)
+        if (l) l.gradient = gradient
       }),
     resetLayer: (id) =>
       withHistory((c) => {
@@ -430,15 +449,14 @@ export const useEditor = create<EditorState>((set, get) => {
         return { comp: draft }
       }),
     endInteractive: () =>
-      set((s) =>
-        s.interactiveBase
-          ? {
-              past: [...s.past, s.interactiveBase].slice(-80),
-              future: [],
-              interactiveBase: null,
-            }
-          : s,
-      ),
+      set((s) => {
+        if (!s.interactiveBase) return s
+        // only record history if the interaction actually changed something —
+        // a plain click (no drag) must not pollute undo with a no-op step
+        const changed = JSON.stringify(s.interactiveBase) !== JSON.stringify(s.comp)
+        if (!changed) return { interactiveBase: null }
+        return { past: [...s.past, s.interactiveBase].slice(-80), future: [], interactiveBase: null }
+      }),
     toggleAnimated: (layerId, prop) => {
       const { playhead } = get()
       withHistory((c) => {

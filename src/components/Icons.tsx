@@ -53,6 +53,8 @@ export type IconName =
   | 'layers'
   | 'sliders'
   | 'film'
+  | 'grip'
+  | 'pencil'
 
 const PATHS: Record<IconName, JSX.Element> = {
   'file-plus': (
@@ -287,6 +289,22 @@ const PATHS: Record<IconName, JSX.Element> = {
       <line x1="2" y1="9" x2="22" y2="9" />
       <line x1="2" y1="15" x2="22" y2="15" />
     </>
+  ),
+  pencil: (
+    <>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </>
+  ),
+  grip: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="9" cy="6" r="1.4" />
+      <circle cx="9" cy="12" r="1.4" />
+      <circle cx="9" cy="18" r="1.4" />
+      <circle cx="15" cy="6" r="1.4" />
+      <circle cx="15" cy="12" r="1.4" />
+      <circle cx="15" cy="18" r="1.4" />
+    </g>
   ),
   move: (
     <>

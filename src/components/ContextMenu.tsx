@@ -11,6 +11,7 @@ export function ContextMenu() {
   const duplicateLayer = useEditor((s) => s.duplicateLayer)
   const toggleVisible = useEditor((s) => s.toggleVisible)
   const deleteLayer = useEditor((s) => s.deleteLayer)
+  const requestRename = useEditor((s) => s.requestRename)
 
   useEffect(() => {
     if (!menu) return
@@ -41,11 +42,14 @@ export function ContextMenu() {
       />
       <div className="ctx-menu" style={{ left: x, top: y }}>
         <div className="ctx-title">{layer.name}</div>
-        <button className="ctx-item" onClick={() => run(() => resetLayer(layer.id))}>
-          <Icon name="rotate" size={15} /> Reset layer
+        <button className="ctx-item" onClick={() => run(() => requestRename(layer.id))}>
+          <Icon name="pencil" size={15} /> Rename
         </button>
         <button className="ctx-item" onClick={() => run(() => duplicateLayer(layer.id))}>
           <Icon name="copy" size={15} /> Duplicate
+        </button>
+        <button className="ctx-item" onClick={() => run(() => resetLayer(layer.id))}>
+          <Icon name="rotate" size={15} /> Reset layer
         </button>
         <button className="ctx-item" onClick={() => run(() => toggleVisible(layer.id))}>
           <Icon name={layer.visible ? 'eye-off' : 'eye'} size={15} /> {layer.visible ? 'Hide' : 'Show'}

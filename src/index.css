@@ -530,6 +530,40 @@ input[type='number']::-webkit-inner-spin-button {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  position: relative;
+}
+.grip {
+  padding: 3px;
+  min-width: 20px;
+  height: 24px;
+  flex: 0 0 auto;
+  color: #c2c7d0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: grab;
+  touch-action: none;
+}
+.grip:hover {
+  color: var(--muted);
+  background: rgba(17, 24, 39, 0.05);
+}
+.grip:active {
+  cursor: grabbing;
+}
+.layer-row.dragging {
+  opacity: 0.45;
+}
+.layer-drop {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 0 0 2px rgba(47, 91, 246, 0.2);
 }
 .layer-row {
   display: flex;
@@ -1366,12 +1400,12 @@ input[type='number']::-webkit-inner-spin-button {
 }
 .playhead {
   position: absolute;
-  top: 0;
   bottom: 0;
   width: 2px;
+  margin-left: -1px;
   background: var(--coral);
   pointer-events: none;
-  z-index: 4;
+  z-index: 3;
 }
 
 /* ---- mobile shell ------------------------------------------------------ */

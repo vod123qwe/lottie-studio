@@ -130,6 +130,16 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (panel warstw + fixy + zaczątek gradientu)
+- **Panel warstw**: strzałki/duplikacja usunięte; **chwytak (grip) po lewej** = drag-reorder
+  (`moveLayerTo`), wskaźnik upuszczenia. Akcje przeniesione do menu PPM: **Rename** (fokusuje pole,
+  `renameRequest`/`requestRename`), Duplicate, Reset layer, Hide, Delete.
+- **Fix undo (Ctrl+Z/Ctrl+Shift+Z)**: `endInteractive` zatwierdza historię tylko przy realnej zmianie
+  (kliknięcie kształtu/keyframe'a bez ruchu nie tworzy już pustego wpisu). Zweryfikowane 2→1→2.
+- **Playhead**: linia zaczyna się pod linijką (nie nachodzi na liczby), wyśrodkowana (-1px).
+- **Zaczątek gradientu** (jeszcze bez UI): `model.Gradient/GradientStop` + `Layer.gradient`,
+  `core/color.ts` (hsv<->rgb), builder emituje `gf`, store `setGradient`. Color picker UI w toku.
+
 ## Sesja: 2026-06-12 (nawigator zoomu timeline — styl AE)
 - Pływający klaster zoomu zastąpiony **paskiem-nawigatorem na dole** timeline: okno (środek =
   pan, krawędzie = zoom 1×–24×), double-click = fit. Zsynchronizowane ze scrollem (scrollX) i Ctrl+scroll.
