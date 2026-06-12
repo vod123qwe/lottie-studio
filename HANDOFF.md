@@ -130,6 +130,11 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (nawigator zoomu timeline — styl AE)
+- Pływający klaster zoomu zastąpiony **paskiem-nawigatorem na dole** timeline: okno (środek =
+  pan, krawędzie = zoom 1×–24×), double-click = fit. Zsynchronizowane ze scrollem (scrollX) i Ctrl+scroll.
+- TODO (życzenia usera, duże): edycja wektorów/punktów (Figma); color picker Figma + gradienty.
+
 ## Sesja: 2026-06-12 (multi-expand timeline + menu kontekstowe)
 - **Wiele warstw rozwiniętych naraz** na timeline (lokalny `Set` expanded; zaznaczenie warstwy
   ją rozwija, caret toggluje; inne zostają). Marquee/uchwyt keyframe'ów uogólnione na układ

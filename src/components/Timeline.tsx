@@ -127,7 +127,10 @@ export function Timeline() {
 
   const bodyRef = useRef<HTMLDivElement>(null)
   const rulerTrackRef = useRef<HTMLDivElement>(null)
+  const navTrackRef = useRef<HTMLDivElement>(null)
+  const navDrag = useRef<{ mode: 'move' | 'left' | 'right'; startX: number; leftFrac: number; widthFrac: number } | null>(null)
   const handleDrag = useRef(false)
+  const [scrollX, setScrollX] = useState(0)
   const marqueeRef = useRef<{ x0: number; y0: number; x1: number; y1: number; moved: boolean } | null>(null)
   const bracketRef = useRef<{ mode: 'move' | 'left' | 'right'; minT: number; maxT: number; startX: number; snap: SnapKf[] } | null>(null)
   const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
@@ -154,7 +157,12 @@ export function Timeline() {
     const ro = new ResizeObserver(() => setViewW(el.clientWidth))
     ro.observe(el)
     setViewW(el.clientWidth)
-    return () => ro.disconnect()
+    const onScroll = () => setScrollX(el.scrollLeft)
+    el.addEventListener('scroll', onScroll)
+    return () => {
+      ro.disconnect()
+      el.removeEventListener('scroll', onScroll)
+    }
   }, [])
 
   const trackView = Math.max(1, viewW - GUTTER - 1)
@@ -201,7 +209,48 @@ export function Timeline() {
     if (!pxPerFrame) return
     setPlayhead((clientX - rectLeft) / pxPerFrame)
   }
-  const zoomBy = (factor: number) => setZoom((z) => clampZoom(z * factor))
+  // ---- bottom navigator (AE-style): drag window to scroll, edges to zoom --
+  const leftFrac = pxPerFrame > 0 ? Math.max(0, Math.min(1, scrollX / pxPerFrame / comp.duration)) : 0
+  const widthFrac = Math.min(1, 1 / zoom)
+  const setScrollFrames = (frames: number) => {
+    if (bodyRef.current) bodyRef.current.scrollLeft = Math.max(0, frames * pxPerFrame)
+  }
+  function navDown(e: React.PointerEvent, mode: 'move' | 'left' | 'right') {
+    e.stopPropagation()
+    navDrag.current = { mode, startX: e.clientX, leftFrac, widthFrac }
+    ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
+  }
+  function navMove(e: React.PointerEvent) {
+    const d = navDrag.current
+    if (!d || !navTrackRef.current) return
+    const navW = navTrackRef.current.clientWidth || 1
+    const dFrac = (e.clientX - d.startX) / navW
+    const dur = comp.duration
+    if (d.mode === 'move') {
+      const newLeft = Math.max(0, Math.min(1 - d.widthFrac, d.leftFrac + dFrac))
+      setScrollFrames(newLeft * dur)
+      return
+    }
+    if (d.mode === 'right') {
+      const newWidth = Math.max(1 / MAX_ZOOM, Math.min(1 - d.leftFrac, d.widthFrac + dFrac))
+      const nz = clampZoom(1 / newWidth)
+      setZoom(nz)
+      requestAnimationFrame(() => {
+        if (bodyRef.current) bodyRef.current.scrollLeft = d.leftFrac * dur * ((trackView / dur) * nz)
+      })
+    } else {
+      const right = d.leftFrac + d.widthFrac
+      const newLeft = Math.max(0, Math.min(right - 1 / MAX_ZOOM, d.leftFrac + dFrac))
+      const nz = clampZoom(1 / (right - newLeft))
+      setZoom(nz)
+      requestAnimationFrame(() => {
+        if (bodyRef.current) bodyRef.current.scrollLeft = newLeft * dur * ((trackView / dur) * nz)
+      })
+    }
+  }
+  function navUp() {
+    navDrag.current = null
+  }
 
   const contentXY = (e: React.PointerEvent): [number, number] => {
     const el = bodyRef.current
@@ -315,28 +364,6 @@ export function Timeline() {
         ['--grid' as string]: `${Math.max(1, step * pxPerFrame)}px`,
       }}
     >
-      <div className="tl-zoom">
-        <button className="icon-btn" title="Zoom out" onClick={() => zoomBy(1 / 1.4)} disabled={zoom <= MIN_ZOOM}>
-          <Icon name="minus" size={15} />
-        </button>
-        <input
-          type="range"
-          min={MIN_ZOOM}
-          max={MAX_ZOOM}
-          step={0.1}
-          value={zoom}
-          onChange={(e) => setZoom(clampZoom(parseFloat(e.target.value)))}
-          title="Timeline zoom"
-        />
-        <button className="icon-btn" title="Zoom in" onClick={() => zoomBy(1.4)} disabled={zoom >= MAX_ZOOM}>
-          <Icon name="plus" size={15} />
-        </button>
-        <button className="icon-btn" title="Fit timeline" onClick={() => setZoom(1)} disabled={zoom === 1}>
-          <Icon name="maximize" size={14} />
-        </button>
-        <span className="tl-zoom-val">{zoom.toFixed(1)}×</span>
-      </div>
-
       <div className="tl-body" ref={bodyRef}>
         {/* ruler */}
         <div className="tl-row ruler-row" style={{ width: rowW }}>
@@ -486,6 +513,31 @@ export function Timeline() {
 
         {/* playhead line spanning all tracks */}
         <div className="playhead" style={{ left: GUTTER + playhead * pxPerFrame }} />
+      </div>
+
+      {/* bottom navigator — drag the window to pan, edges to zoom */}
+      <div className="tl-nav">
+        <div className="tl-nav-gutter" title="Double-click the bar to fit">{zoom.toFixed(1)}×</div>
+        <div
+          className="tl-nav-track"
+          ref={navTrackRef}
+          onDoubleClick={() => {
+            setZoom(1)
+            setScrollFrames(0)
+          }}
+        >
+          <div
+            className="tl-nav-win"
+            style={{ left: `${leftFrac * 100}%`, width: `${widthFrac * 100}%` }}
+            title="Drag to pan · edges to zoom"
+            onPointerDown={(e) => navDown(e, 'move')}
+            onPointerMove={navMove}
+            onPointerUp={navUp}
+          >
+            <div className="tl-nav-edge left" onPointerDown={(e) => navDown(e, 'left')} onPointerMove={navMove} onPointerUp={navUp} />
+            <div className="tl-nav-edge right" onPointerDown={(e) => navDown(e, 'right')} onPointerMove={navMove} onPointerUp={navUp} />
+          </div>
+        </div>
       </div>
     </section>
   )
