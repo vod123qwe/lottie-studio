@@ -495,6 +495,207 @@ input[type='number']::-webkit-inner-spin-button {
   display: block;
 }
 
+/* ---- color picker ------------------------------------------------------ */
+.cp-swatch-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.cp-swatch {
+  width: 46px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+.cp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.color-pop {
+  position: fixed;
+  z-index: 41;
+  width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  box-shadow: var(--shadow-pop);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.cp-tabs {
+  width: 100%;
+}
+.cp-tabs button {
+  flex: 1;
+}
+.cp-sv {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+  background-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
+    linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+}
+.cp-sv-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cp-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.cp-preview {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+}
+.cp-sliders {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.cp-hue,
+.cp-alpha {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: none;
+}
+.cp-hue {
+  background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+}
+.cp-alpha {
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0), var(--c, #000)),
+    repeating-conic-gradient(#cfd3da 0% 25%, #fff 0% 50%) 0 0 / 10px 10px;
+}
+.cp-knob {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cp-fields {
+  display: flex;
+  gap: 8px;
+}
+.cp-hex {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding-left: 8px;
+}
+.cp-hex span {
+  color: var(--faint);
+}
+.cp-hex input {
+  border: none;
+  background: none;
+  padding: 6px 8px 6px 0;
+  text-transform: uppercase;
+}
+.cp-alpha-num {
+  width: 76px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding-right: 8px;
+}
+.cp-alpha-num input {
+  border: none;
+  background: none;
+  text-align: right;
+}
+.cp-alpha-num span {
+  color: var(--faint);
+  font-size: 11px;
+}
+.cp-swatches {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+.cp-sw {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1px solid var(--line-2);
+  padding: 0;
+}
+.cp-grad-bar {
+  position: relative;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  cursor: copy;
+  touch-action: none;
+}
+.cp-stop {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+}
+.cp-stop.active {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.cp-grad-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cp-angle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cp-angle input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+.cp-angle span {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 32px;
+}
+.cp-del {
+  font-size: 12px;
+  padding: 4px 9px;
+}
+
 /* ---- panels ------------------------------------------------------------ */
 .panel {
   background: var(--surface);

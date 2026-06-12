@@ -130,6 +130,15 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (color picker w stylu Figmy + gradienty)
+- `ColorPicker.tsx`: pole SV + suwak barwy + hex + próbki; zakładki Solid/Linear/Radial; edytor
+  gradientu (pasek ze stopami: dodaj klikiem, przeciągaj, usuń; alfa per-stop; kąt dla linear).
+  Popover `position:fixed` liczony od swatcha (nie obcina go overflow panelu). `ColorSwatch` trigger.
+- Live-edycja przez `setPropertyLive`/`setGradientLive`/`setStrokeColorLive`/`setCompLive` +
+  begin/endInteractive → jeden wpis undo na otwarcie pickera.
+- Użyte dla Fill (z gradientem), Stroke i Canvas. Gradient renderuje się w podglądzie (`gf` → lottie-web).
+- NASTĘPNE (ostatnie z dużej listy): edycja wektorów/punktów ścieżki jak w Figmie.
+
 ## Sesja: 2026-06-12 (panel warstw + fixy + zaczątek gradientu)
 - **Panel warstw**: strzałki/duplikacja usunięte; **chwytak (grip) po lewej** = drag-reorder
   (`moveLayerTo`), wskaźnik upuszczenia. Akcje przeniesione do menu PPM: **Rename** (fokusuje pole,

@@ -5,6 +5,7 @@ import { hexToRgb, rgbToHex } from '../core/factory'
 import { type Easing, type PropKind, type Property } from '../core/model'
 import { PRESETS, PRESET_CATEGORIES, type PresetCategory } from '../core/presets'
 import { Icon, type IconName } from './Icons'
+import { ColorSwatch } from './ColorPicker'
 
 // ---------------------------------------------------------------------------
 // Inspector: composition settings on top, then the selected layer's shape,
@@ -158,6 +159,9 @@ function NumField(props: {
 function CompSettings() {
   const comp = useEditor((s) => s.comp)
   const setComp = useEditor((s) => s.setComp)
+  const setCompLive = useEditor((s) => s.setCompLive)
+  const beginInteractive = useEditor((s) => s.beginInteractive)
+  const endInteractive = useEditor((s) => s.endInteractive)
   return (
     <Section title="Composition">
       <label className="text-field">
@@ -174,7 +178,13 @@ function CompSettings() {
       </div>
       <label className="color-field">
         <span>Canvas</span>
-        <input type="color" value={comp.bg} onChange={(e) => setComp({ bg: e.target.value })} />
+        <ColorSwatch
+          title="Canvas color (preview only)"
+          value={{ kind: 'solid', rgb: hexToRgb(comp.bg) }}
+          begin={beginInteractive}
+          end={endInteractive}
+          onChange={(p) => p.kind === 'solid' && setCompLive({ bg: rgbToHex(p.rgb) })}
+        />
         <em>preview only</em>
       </label>
     </Section>
@@ -278,8 +288,12 @@ export function PropertiesPanel() {
   const setLayerSize = useEditor((s) => s.setLayerSize)
   const setCornerRadius = useEditor((s) => s.setCornerRadius)
   const setFillEnabled = useEditor((s) => s.setFillEnabled)
-  const setStrokeColor = useEditor((s) => s.setStrokeColor)
   const setStrokeWidth = useEditor((s) => s.setStrokeWidth)
+  const setPropertyLive = useEditor((s) => s.setPropertyLive)
+  const setGradientLive = useEditor((s) => s.setGradientLive)
+  const setStrokeColorLive = useEditor((s) => s.setStrokeColorLive)
+  const beginInteractive = useEditor((s) => s.beginInteractive)
+  const endInteractive = useEditor((s) => s.endInteractive)
   const selCount = useEditor((s) => s.selectedLayerIds.length)
 
   return (
@@ -329,11 +343,24 @@ export function PropertiesPanel() {
 
             <label className="color-field">
               <span>Fill</span>
-              <input
-                type="color"
-                value={rgbToHex(evalProperty(layer.fillColor, playhead))}
-                disabled={layer.fillEnabled === false}
-                onChange={(e) => setProperty(layer.id, 'fillColor', hexToRgb(e.target.value))}
+              <ColorSwatch
+                allowGradient
+                title="Fill"
+                begin={beginInteractive}
+                end={endInteractive}
+                value={
+                  layer.gradient
+                    ? { kind: 'gradient', gradient: layer.gradient }
+                    : { kind: 'solid', rgb: evalProperty(layer.fillColor, playhead) }
+                }
+                onChange={(p) => {
+                  if (p.kind === 'solid') {
+                    if (layer.gradient) setGradientLive(layer.id, null)
+                    setPropertyLive(layer.id, 'fillColor', p.rgb)
+                  } else {
+                    setGradientLive(layer.id, p.gradient)
+                  }
+                }}
               />
               {layer.shape === 'path' && (
                 <input
@@ -350,10 +377,12 @@ export function PropertiesPanel() {
             {layer.shape === 'path' && layer.stroke && (
               <label className="color-field">
                 <span>Stroke</span>
-                <input
-                  type="color"
-                  value={rgbToHex(layer.stroke.color)}
-                  onChange={(e) => setStrokeColor(layer.id, hexToRgb(e.target.value))}
+                <ColorSwatch
+                  title="Stroke"
+                  begin={beginInteractive}
+                  end={endInteractive}
+                  value={{ kind: 'solid', rgb: layer.stroke.color }}
+                  onChange={(p) => p.kind === 'solid' && setStrokeColorLive(layer.id, p.rgb)}
                 />
                 <div className="num" style={{ maxWidth: 96 }}>
                   <span>W</span>

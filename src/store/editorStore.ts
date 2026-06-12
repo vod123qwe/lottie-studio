@@ -89,6 +89,9 @@ interface EditorState {
   // live drag: snapshot once, stream updates, commit once
   beginInteractive: () => void
   setPropertyLive: (layerId: string, prop: PropKind, value: number[]) => void
+  setGradientLive: (id: string, gradient: Gradient | null) => void
+  setStrokeColorLive: (id: string, color: number[]) => void
+  setCompLive: (patch: Partial<Composition>) => void
   setLayerPositionsLive: (positions: Record<string, [number, number]>) => void
   mutateLive: (producer: (draft: Composition) => void) => void
   endInteractive: () => void
@@ -434,6 +437,22 @@ export const useEditor = create<EditorState>((set, get) => {
         return { comp: draft }
       })
     },
+    setGradientLive: (id, gradient) =>
+      set((s) => {
+        const draft = clone(s.comp)
+        const l = draft.layers.find((x) => x.id === id)
+        if (l) l.gradient = gradient
+        return { comp: draft }
+      }),
+    setStrokeColorLive: (id, color) =>
+      set((s) => {
+        const draft = clone(s.comp)
+        const l = draft.layers.find((x) => x.id === id)
+        if (l && l.stroke) l.stroke = { ...l.stroke, color }
+        return { comp: draft }
+      }),
+    setCompLive: (patch) =>
+      set((s) => ({ comp: { ...clone(s.comp), ...patch } })),
     setLayerPositionsLive: (positions) => {
       const { playhead, autoKey } = get()
       set((s) => {
