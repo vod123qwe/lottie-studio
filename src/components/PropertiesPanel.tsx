@@ -80,6 +80,10 @@ const PRESET_ICONS: Record<string, IconName> = {
   glow: 'sun',
   // path
   flagWave: 'wind',
+  morphCircle: 'blend',
+  morphSquare: 'blend',
+  morphTriangle: 'blend',
+  morphStar: 'blend',
 }
 
 /** Collapsible inspector section with a chevron header. */

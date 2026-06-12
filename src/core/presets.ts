@@ -11,6 +11,7 @@ import type {
 } from './model'
 import { createSolidLayer, uid } from './factory'
 import { evalProperty } from './interpolate'
+import { ringFromPath, targetRing, type MorphTarget } from './pathSample'
 
 // ---------------------------------------------------------------------------
 // Animation presets. Each preset turns one or more layer properties into
@@ -73,6 +74,28 @@ const animProp = (value: number[], keyframes: Keyframe[]): Property => ({
   keyframes,
 })
 const clampT = (comp: Composition, t: number) => Math.max(0, Math.min(comp.duration, Math.round(t)))
+
+/** Morph a path layer to a primitive shape and back (loops). */
+function morphTo(layer: Layer, comp: Composition, kind: MorphTarget): PresetResult {
+  if (layer.shape !== 'path' || !layer.path?.length) return {}
+  const N = 64
+  const src = ringFromPath(layer.path, N)
+  const tgt = targetRing(kind, Math.max(1, layer.size[0]) / 2, Math.max(1, layer.size[1]) / 2, N)
+  const sub = (pts: Vec2[]): SubPath => ({
+    closed: true,
+    v: pts.map((p) => [p[0], p[1]] as Vec2),
+    i: pts.map(() => [0, 0] as Vec2),
+    o: pts.map(() => [0, 0] as Vec2),
+  })
+  const d = comp.duration
+  return {
+    pathKeyframes: [
+      { t: 0, subpaths: [sub(src)], easing: 'easeInOut' },
+      { t: clampT(comp, d * 0.5), subpaths: [sub(tgt)], easing: 'easeInOut' },
+      { t: d, subpaths: [sub(src)], easing: 'easeInOut' },
+    ],
+  }
+}
 
 export const PRESETS: Preset[] = [
   // ---- entrances --------------------------------------------------------
@@ -899,5 +922,33 @@ export const PRESETS: Preset[] = [
       }
       return { pathKeyframes: pks }
     },
+  },
+  {
+    id: 'morphCircle',
+    name: 'Morph → Circle',
+    category: 'path',
+    hint: 'Morph a path layer into a circle and back',
+    build: (l, c) => morphTo(l, c, 'circle'),
+  },
+  {
+    id: 'morphSquare',
+    name: 'Morph → Square',
+    category: 'path',
+    hint: 'Morph a path layer into a square and back',
+    build: (l, c) => morphTo(l, c, 'square'),
+  },
+  {
+    id: 'morphTriangle',
+    name: 'Morph → Triangle',
+    category: 'path',
+    hint: 'Morph a path layer into a triangle and back',
+    build: (l, c) => morphTo(l, c, 'triangle'),
+  },
+  {
+    id: 'morphStar',
+    name: 'Morph → Star',
+    category: 'path',
+    hint: 'Morph a path layer into a star and back',
+    build: (l, c) => morphTo(l, c, 'star'),
   },
 ]

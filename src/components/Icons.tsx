@@ -49,6 +49,7 @@ export type IconName =
   | 'move'
   | 'minus'
   | 'wind'
+  | 'blend'
 
 const PATHS: Record<IconName, JSX.Element> = {
   'file-plus': (
@@ -247,6 +248,12 @@ const PATHS: Record<IconName, JSX.Element> = {
       <path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5" />
       <path d="M3 16h15a2.5 2.5 0 1 1-2.5 2.5" />
       <line x1="3" y1="12" x2="10" y2="12" />
+    </>
+  ),
+  blend: (
+    <>
+      <circle cx="9" cy="9" r="6" />
+      <circle cx="15" cy="15" r="6" />
     </>
   ),
   move: (
