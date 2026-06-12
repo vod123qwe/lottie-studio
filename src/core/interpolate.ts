@@ -12,6 +12,14 @@ const CURVES: Record<Easing, [number, number, number, number]> = {
   easeIn: [0.42, 0, 1, 1],
   easeOut: [0, 0, 0.58, 1],
   easeInOut: [0.42, 0, 0.58, 1],
+  // smoother (cubic-ish) ramps
+  smoothIn: [0.32, 0, 0.67, 0],
+  smoothOut: [0.33, 1, 0.68, 1],
+  smoothInOut: [0.65, 0, 0.35, 1],
+  // anticipation / overshoot ("back") — y can exceed 0..1
+  backIn: [0.36, 0, 0.66, -0.56],
+  backOut: [0.34, 1.56, 0.64, 1],
+  backInOut: [0.68, -0.6, 0.32, 1.6],
 }
 
 /** Returns a function mapping progress x (0..1) -> eased y (0..1). */

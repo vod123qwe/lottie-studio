@@ -2,8 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { useEditor, useSelectedLayer } from '../store/editorStore'
 import { evalProperty } from '../core/interpolate'
 import { hexToRgb, rgbToHex } from '../core/factory'
-import { EASINGS, type Easing, type PropKind, type Property } from '../core/model'
-import { PRESETS } from '../core/presets'
+import { type Easing, type PropKind, type Property } from '../core/model'
+import { PRESETS, PRESET_CATEGORIES, type PresetCategory } from '../core/presets'
 import { Icon, type IconName } from './Icons'
 
 // ---------------------------------------------------------------------------
@@ -16,20 +16,56 @@ const round = (n: number) => Math.round(n * 100) / 100
 
 const EASING_LABELS: Record<Easing, string> = {
   linear: 'Linear',
-  easeIn: 'In',
-  easeOut: 'Out',
-  easeInOut: 'In·Out',
+  easeIn: 'Ease In',
+  easeOut: 'Ease Out',
+  easeInOut: 'Ease In-Out',
+  smoothIn: 'Smooth In',
+  smoothOut: 'Smooth Out',
+  smoothInOut: 'Smooth In-Out',
+  backIn: 'Back In',
+  backOut: 'Back Out',
+  backInOut: 'Back In-Out',
 }
 
+const EASING_GROUPS: { label: string; items: Easing[] }[] = [
+  { label: 'Basic', items: ['linear', 'easeIn', 'easeOut', 'easeInOut'] },
+  { label: 'Smooth', items: ['smoothIn', 'smoothOut', 'smoothInOut'] },
+  { label: 'Overshoot', items: ['backIn', 'backOut', 'backInOut'] },
+]
+
 const PRESET_ICONS: Record<string, IconName> = {
+  // in
   fadeIn: 'sun',
-  fadeOut: 'sunset',
   popIn: 'sparkles',
+  zoomIn: 'maximize',
+  bounceIn: 'arrow-down',
   slideInLeft: 'arrow-left',
   slideInRight: 'arrow-right',
+  slideInUp: 'arrow-up',
+  slideInDown: 'arrow-down',
+  rollIn: 'rotate',
+  flyIn: 'sparkles',
+  dropIn: 'arrow-down',
+  // out
+  fadeOut: 'sunset',
+  zoomOut: 'minimize',
+  slideOutLeft: 'arrow-left',
+  slideOutRight: 'arrow-right',
+  slideOutUp: 'arrow-up',
+  fallOut: 'arrow-down',
+  // emphasis
+  shake: 'move',
+  wobble: 'activity',
+  heartbeat: 'heart',
+  flash: 'zap',
+  tada: 'sparkles',
+  rubberBand: 'maximize',
+  // loop
   spin: 'rotate',
   pulse: 'activity',
-  dropIn: 'arrow-down',
+  float: 'arrow-up',
+  breathe: 'activity',
+  swing: 'rotate',
 }
 
 /** Collapsible inspector section with a chevron header. */
@@ -132,10 +168,26 @@ function PropControls({ layerId, kind, prop }: { layerId: string; kind: PropKind
 
 function Presets({ layerId }: { layerId: string }) {
   const applyPreset = useEditor((s) => s.applyPreset)
+  const [cat, setCat] = useState<PresetCategory>('in')
+  const list = PRESETS.filter((p) => p.category === cat)
   return (
     <Section title="Presets">
+      <div className="row" style={{ paddingBottom: 2 }}>
+        <div className="seg" style={{ width: '100%' }}>
+          {PRESET_CATEGORIES.map((c) => (
+            <button
+              key={c.id}
+              className={c.id === cat ? 'active' : ''}
+              style={{ flex: 1 }}
+              onClick={() => setCat(c.id)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="preset-grid">
-        {PRESETS.map((p) => (
+        {list.map((p) => (
           <button key={p.id} className="preset" title={p.hint} onClick={() => applyPreset(layerId, p.id)}>
             <Icon name={PRESET_ICONS[p.id] ?? 'sparkles'} size={15} />
             {p.name}
@@ -156,21 +208,23 @@ function KeyframeEasing() {
   if (!kf) return null
   return (
     <Section title="Selected keyframe" sub={`frame ${kf.t}`}>
-      <div className="row" style={{ flexDirection: 'column', gap: 6 }}>
-        <span className="muted" style={{ fontWeight: 500 }}>Easing</span>
-        <div className="seg" style={{ width: '100%' }}>
-          {EASINGS.map((e) => (
-            <button
-              key={e}
-              className={e === kf.easing ? 'active' : ''}
-              style={{ flex: 1 }}
-              onClick={() => setKeyframeEasing(ref.layerId, ref.prop, ref.kfId, e)}
-            >
-              {EASING_LABELS[e]}
-            </button>
+      <label className="text-field">
+        <span>Easing</span>
+        <select
+          value={kf.easing}
+          onChange={(e) => setKeyframeEasing(ref.layerId, ref.prop, ref.kfId, e.target.value as Easing)}
+        >
+          {EASING_GROUPS.map((g) => (
+            <optgroup key={g.label} label={g.label}>
+              {g.items.map((e) => (
+                <option key={e} value={e}>
+                  {EASING_LABELS[e]}
+                </option>
+              ))}
+            </optgroup>
           ))}
-        </div>
-      </div>
+        </select>
+      </label>
       <p className="hint">Easing applies to the segment leaving this keyframe.</p>
     </Section>
   )

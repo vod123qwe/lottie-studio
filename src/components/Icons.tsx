@@ -41,6 +41,12 @@ export type IconName =
   | 'rotate'
   | 'activity'
   | 'image'
+  | 'arrow-up'
+  | 'maximize'
+  | 'minimize'
+  | 'heart'
+  | 'zap'
+  | 'move'
 
 const PATHS: Record<IconName, JSX.Element> = {
   'file-plus': (
@@ -204,6 +210,43 @@ const PATHS: Record<IconName, JSX.Element> = {
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <path d="M21 15l-5-5L5 21" />
+    </>
+  ),
+  'arrow-up': (
+    <>
+      <line x1="12" y1="20" x2="12" y2="6" />
+      <polyline points="7 11 12 6 17 11" />
+      <line x1="5" y1="3" x2="19" y2="3" />
+    </>
+  ),
+  maximize: (
+    <>
+      <polyline points="15 3 21 3 21 9" />
+      <polyline points="9 21 3 21 3 15" />
+      <line x1="21" y1="3" x2="14" y2="10" />
+      <line x1="3" y1="21" x2="10" y2="14" />
+    </>
+  ),
+  minimize: (
+    <>
+      <polyline points="4 14 10 14 10 20" />
+      <polyline points="20 10 14 10 14 4" />
+      <line x1="14" y1="10" x2="21" y2="3" />
+      <line x1="10" y1="14" x2="3" y2="21" />
+    </>
+  ),
+  heart: (
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7 7-7z" />
+  ),
+  zap: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />,
+  move: (
+    <>
+      <polyline points="5 9 2 12 5 15" />
+      <polyline points="9 5 12 2 15 5" />
+      <polyline points="15 19 12 22 9 19" />
+      <polyline points="19 9 22 12 19 15" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <line x1="12" y1="2" x2="12" y2="22" />
     </>
   ),
 }

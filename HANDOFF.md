@@ -97,6 +97,18 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
     z ostrzeżeniem); fill-opacity uproszczone do opacity warstwy.
 - `tsc --noEmit` czysto, `vite build` OK; przetestowane headless (4 warstwy z testowego SVG, render OK).
 
-### Następne kroki
-- Rozbudowa presetów: wszystkie rodziny (Wejścia/Wyjścia/Emphasis/Pętle) + **filtr segmentowy**
-  w panelu + rozszerzony zestaw easingów (smooth + lekki overshoot „back"). ← następne w kolejce.
+## Sesja: 2026-06-12 (rozbudowa presetów + easingi)
+
+### Zrobione
+- **Presety** (`core/presets.ts`): dodane pole `category` ('in'|'out'|'emphasis'|'loop') + ~20 nowych.
+  Wejścia: Zoom In, Bounce In, Slide ↑/↓, Roll In, Fly In. Wyjścia: Zoom/Slide Out, Fall Out.
+  Emphasis: Shake, Wobble, Heartbeat, Flash, Tada, Rubber Band. Pętle: Float, Breathe, Swing.
+- **Filtr segmentowy** w sekcji Presets (In/Out/Emphasis/Loop) zamiast jednej długiej listy.
+- **Easingi** rozszerzone (`model.ts` + `interpolate.ts`): smoothIn/Out/InOut + backIn/Out/InOut
+  (overshoot — y poza 0..1, eksport Lottie OK). Picker keyframe'a zmieniony z segmented na
+  `select` z grupami (Basic/Smooth/Overshoot).
+- Ikony presetów dorzucone (arrow-up, maximize, minimize, heart, zap, move).
+- `tsc --noEmit` czysto, `vite build` OK; headless: In=11 presetów, Emphasis=6, Heartbeat→6 kf, 10 easingów.
+
+### Auto-merge
+- Ustalone: po każdej przetestowanej zmianie robię fast-forward na `main` (deploy live sam rusza).

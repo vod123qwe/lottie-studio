@@ -16,9 +16,30 @@
 
 export type Vec2 = [number, number]
 
-export type Easing = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+export type Easing =
+  | 'linear'
+  | 'easeIn'
+  | 'easeOut'
+  | 'easeInOut'
+  | 'smoothIn'
+  | 'smoothOut'
+  | 'smoothInOut'
+  | 'backIn'
+  | 'backOut'
+  | 'backInOut'
 
-export const EASINGS: Easing[] = ['linear', 'easeIn', 'easeOut', 'easeInOut']
+export const EASINGS: Easing[] = [
+  'linear',
+  'easeIn',
+  'easeOut',
+  'easeInOut',
+  'smoothIn',
+  'smoothOut',
+  'smoothInOut',
+  'backIn',
+  'backOut',
+  'backInOut',
+]
 
 /** A single keyframe. `easing` describes the segment *leaving* this keyframe. */
 export interface Keyframe {
