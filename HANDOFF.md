@@ -121,6 +121,17 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
 - `factory.createSolidLayer`; pasek kategorii przerobiony na przewijane chipy `.cat-tabs` (7 kategorii).
 - Następne etapy: animowane ścieżki → Flag/Wave (kat. Path), potem Morph; potem multi-select; preview.
 
+## Sesja: 2026-06-12 (druga fala presetów + testy)
+- Dodane ~21 presetów (łącznie **65**): in (Spiral/Expand/Unfold/Back↑), out (Spiral/Slide↓/Collapse),
+  emphasis (Bounce/Jiggle/Squash/Buzz/Head Shake), loop (Orbit/Tick Tock/Blink),
+  motion (Run/Drift), fx (Shockwave/Confetti/Motion Trail), path (Morph→Hexagon/Heart).
+- `pathSample`: cele morphu rozszerzone o hexagon i serce.
+- **Testy**: `/tmp/ptest.ts` (esbuild→node) sprawdza każdy preset — skończone wartości, czasy
+  w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
+  czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
+  Wynik: 65/65 PASS.
+- TODO (prośba usera): wariant mobilny — responsywny układ po breakpoincie, wygodny na telefonie.
+
 ## Sesja: 2026-06-12 (animowane ścieżki, morph, multi-select, preview)
 - **Animowane ścieżki**: `Layer.pathKeyframes`, builder emituje animowany `sh` per kontur.
   Preset **Flag Wave** (kat. Path) — falowanie ścieżki (traveling wave, zakotwiczone z lewej).

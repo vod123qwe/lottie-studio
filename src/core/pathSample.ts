@@ -111,7 +111,7 @@ export function ringFromPath(subs: SubPath[], N: number): Vec2[] {
   return normalizeRing(resample(flattenSub(largest(subs)), N))
 }
 
-export type MorphTarget = 'circle' | 'square' | 'triangle' | 'star'
+export type MorphTarget = 'circle' | 'square' | 'triangle' | 'star' | 'hexagon' | 'heart'
 
 /** A normalized N-point ring for a primitive shape, fit to half-extents rx/ry. */
 export function targetRing(kind: MorphTarget, rx: number, ry: number, N: number): Vec2[] {
@@ -123,10 +123,26 @@ export function targetRing(kind: MorphTarget, rx: number, ry: number, N: number)
     }
     return normalizeRing(out)
   }
+  if (kind === 'heart') {
+    const pts: Vec2[] = []
+    const steps = 120
+    for (let i = 0; i < steps; i++) {
+      const t = (2 * Math.PI * i) / steps
+      const x = 16 * Math.sin(t) ** 3
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))
+      pts.push([(x / 16) * rx, (y / 17) * ry])
+    }
+    return normalizeRing(resample(pts, N))
+  }
   let corners: Vec2[] = []
   if (kind === 'square') corners = [[-rx, -ry], [rx, -ry], [rx, ry], [-rx, ry]]
   else if (kind === 'triangle') corners = [[0, -ry], [rx, ry], [-rx, ry]]
-  else {
+  else if (kind === 'hexagon') {
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + (2 * Math.PI * i) / 6
+      corners.push([Math.cos(a) * rx, Math.sin(a) * ry])
+    }
+  } else {
     // 5-point star, alternating outer/inner radius
     for (let i = 0; i < 10; i++) {
       const rr = i % 2 ? 0.45 : 1
