@@ -386,6 +386,7 @@ export const useEditor = create<EditorState>((set, get) => {
           p.animated = true
           p.keyframes = change.keyframes
         }
+        if (result.pathKeyframes?.length) l.pathKeyframes = result.pathKeyframes
         if (result.addLayers?.length) {
           const idx = c.layers.findIndex((x) => x.id === layerId)
           // helper layers sit just behind the target in the stack

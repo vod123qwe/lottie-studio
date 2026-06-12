@@ -75,7 +75,24 @@ function buildShapeItems(layer: Layer): object[] {
       },
     ]
   }
-  // path: one Lottie shape per contour, geometry already relative to center
+  // animated path (flag wave / morph): one animated shape per contour
+  const pks = layer.pathKeyframes
+  if (pks && pks.length >= 2) {
+    const count = pks[0].subpaths.length
+    const items: object[] = []
+    for (let ci = 0; ci < count; ci++) {
+      const k = pks.map((pk, idx) => {
+        const sp = pk.subpaths[ci]
+        const s = [{ c: sp.closed, v: sp.v, i: sp.i, o: sp.o }]
+        if (idx === pks.length - 1) return { t: pk.t, s }
+        const [x1, y1, x2, y2] = CURVES[pk.easing]
+        return { t: pk.t, s, o: { x: [x1], y: [y1] }, i: { x: [x2], y: [y2] } }
+      })
+      items.push({ ty: 'sh', nm: `Path ${ci + 1}`, ind: ci, ks: { a: 1, k } })
+    }
+    return items
+  }
+  // static path: one Lottie shape per contour, geometry already relative to center
   return (layer.path ?? []).map((sp, i) => ({
     ty: 'sh',
     nm: `Path ${i + 1}`,

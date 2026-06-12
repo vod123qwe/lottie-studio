@@ -76,6 +76,14 @@ export interface Stroke {
   width: number
 }
 
+/** One frame of an animated path (flag wave, morph). All keyframes must share
+ *  the same contour count and per-contour vertex count for Lottie to tween. */
+export interface PathKeyframe {
+  t: number
+  subpaths: SubPath[]
+  easing: Easing
+}
+
 /** The transform/appearance properties every layer exposes to the timeline. */
 export type PropKind =
   | 'position'
@@ -109,6 +117,8 @@ export interface Layer {
   visible: boolean
   // path geometry — present only when shape === 'path'
   path?: SubPath[]
+  // animated path (flag wave / morph) — overrides `path` for rendering
+  pathKeyframes?: PathKeyframe[]
   // appearance extras
   fillEnabled?: boolean // undefined = filled (back-compat); false = no fill
   stroke?: Stroke | null

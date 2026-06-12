@@ -78,6 +78,8 @@ const PRESET_ICONS: Record<string, IconName> = {
   dust: 'sparkles',
   sparkle: 'sparkles',
   glow: 'sun',
+  // path
+  flagWave: 'wind',
 }
 
 /** Collapsible inspector section with a chevron header. */

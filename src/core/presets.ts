@@ -1,4 +1,14 @@
-import type { Composition, Easing, Keyframe, Layer, Property, PropKind } from './model'
+import type {
+  Composition,
+  Easing,
+  Keyframe,
+  Layer,
+  PathKeyframe,
+  Property,
+  PropKind,
+  SubPath,
+  Vec2,
+} from './model'
 import { createSolidLayer, uid } from './factory'
 import { evalProperty } from './interpolate'
 
@@ -36,6 +46,7 @@ export interface PresetChange {
 export interface PresetResult {
   changes?: PresetChange[]
   addLayers?: Layer[]
+  pathKeyframes?: PathKeyframe[] // animate the target layer's path (flag/morph)
 }
 
 export interface Preset {
@@ -854,6 +865,39 @@ export const PRESETS: Preset[] = [
       L.opacity = animProp([0], [kf(0, [0], 'easeInOut'), kf(d * 0.5, [38], 'easeInOut'), kf(d, [0], 'easeInOut')])
       L.scale = animProp([90, 90], [kf(0, [90, 90], 'easeInOut'), kf(d * 0.5, [112, 112], 'easeInOut'), kf(d, [90, 90], 'easeInOut')])
       return { addLayers: [L] }
+    },
+  },
+
+  // ---- path (animated geometry) -----------------------------------------
+  {
+    id: 'flagWave',
+    name: 'Flag Wave',
+    category: 'path',
+    hint: 'Ripple a path like a flag in the wind (path layers)',
+    build: (layer, comp) => {
+      if (layer.shape !== 'path' || !layer.path || !layer.path.length) return {}
+      const base = layer.path
+      const tw = Math.max(1, layer.size[0])
+      const minX = -tw / 2
+      const A = Math.max(4, tw * 0.08)
+      const waves = 1.5
+      const N = 8
+      const pks: PathKeyframe[] = []
+      for (let s = 0; s <= N; s++) {
+        const phase = 2 * Math.PI * (s / N)
+        const subpaths: SubPath[] = base.map((sp) => ({
+          closed: sp.closed,
+          i: sp.i.map((p) => [p[0], p[1]] as Vec2),
+          o: sp.o.map((p) => [p[0], p[1]] as Vec2),
+          v: sp.v.map(([vx, vy]) => {
+            const w = (vx - minX) / tw
+            const dy = A * w * Math.sin((vx / tw) * 2 * Math.PI * waves + phase)
+            return [vx, vy + dy] as Vec2
+          }),
+        }))
+        pks.push({ t: clampT(comp, (comp.duration * s) / N), subpaths, easing: 'easeInOut' })
+      }
+      return { pathKeyframes: pks }
     },
   },
 ]
