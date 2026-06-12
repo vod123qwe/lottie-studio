@@ -41,6 +41,10 @@ Stack: **Vite + React + TypeScript + Zustand**. Zero backendu — wszystko w prz
 
 ## Pomysły na dalej
 
+> Większy koncept (wspólny dysk C: z folderami imiennymi + „kto czego słucha")
+> opisałem w [`IDEAS.md`](./IDEAS.md).
+
+
 - Prawdziwa skórka Winampa przez [Webamp](https://webamp.org) (obsługa skórek `.wsz`).
 - Wyszukiwarka YouTube (YouTube Data API — wtedy potrzebny darmowy klucz).
 - Spotify Web Playback SDK jako alternatywne źródło (pełne utwory dla kont Premium).
