@@ -47,6 +47,7 @@ export type IconName =
   | 'heart'
   | 'zap'
   | 'move'
+  | 'minus'
 
 const PATHS: Record<IconName, JSX.Element> = {
   'file-plus': (
@@ -239,6 +240,7 @@ const PATHS: Record<IconName, JSX.Element> = {
     <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7 7-7z" />
   ),
   zap: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />,
+  minus: <line x1="5" y1="12" x2="19" y2="12" />,
   move: (
     <>
       <polyline points="5 9 2 12 5 15" />

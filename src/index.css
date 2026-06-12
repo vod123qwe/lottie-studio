@@ -802,11 +802,45 @@ input[type='number']::-webkit-inner-spin-button {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 .tl-body {
   position: relative;
   height: 100%;
-  overflow-y: auto;
+  overflow: auto;
+}
+
+/* floating zoom cluster, pinned over the top-right of the timeline */
+.tl-zoom {
+  position: absolute;
+  top: 4px;
+  right: 14px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-ctrl);
+  box-shadow: var(--shadow-pop);
+}
+.tl-zoom .icon-btn {
+  min-width: 24px;
+  height: 24px;
+  padding: 4px;
+}
+.tl-zoom input[type='range'] {
+  width: 96px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.tl-zoom-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 34px;
+  text-align: right;
 }
 .tl-row {
   display: flex;
@@ -829,6 +863,12 @@ input[type='number']::-webkit-inner-spin-button {
   cursor: pointer;
   font-weight: 500;
   color: var(--text-2);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.ruler-row .tl-label.corner {
+  z-index: 4;
 }
 .tl-label.sub {
   color: var(--muted);
@@ -852,7 +892,7 @@ input[type='number']::-webkit-inner-spin-button {
   transition: transform 0.15s ease;
 }
 .tl-track {
-  flex: 1;
+  flex: 0 0 auto;
   position: relative;
   cursor: text;
   background-image: repeating-linear-gradient(

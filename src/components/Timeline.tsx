@@ -13,10 +13,13 @@ import { Icon } from './Icons'
 // ---------------------------------------------------------------------------
 // Timeline: a scrubbable ruler plus one row per layer. The selected layer
 // expands into per-property tracks whose keyframes can be selected and dragged.
-// Left gutter width is shared between CSS (--gutter) and JS (GUTTER).
+// Horizontally zoomable (1×–24×) with sticky row labels; Ctrl/Cmd + wheel zooms
+// around the cursor. Left gutter width is shared between CSS (--gutter) and JS.
 // ---------------------------------------------------------------------------
 
 const GUTTER = 140
+const MIN_ZOOM = 1
+const MAX_ZOOM = 24
 
 interface KfDrag {
   layerId: string
@@ -31,6 +34,8 @@ function niceStep(duration: number, pxPerFrame: number) {
   for (const s of steps) if (s * pxPerFrame >= 48) return s
   return Math.max(1, Math.round(duration / 8))
 }
+
+const clampZoom = (z: number) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z))
 
 function Diamond({
   layer,
@@ -96,20 +101,47 @@ export function Timeline() {
   const selectLayer = useEditor((s) => s.selectLayer)
   const setPlayhead = useEditor((s) => s.setPlayhead)
 
-  const rulerRef = useRef<HTMLDivElement>(null)
-  const [trackW, setTrackW] = useState(0)
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const [viewW, setViewW] = useState(0)
+  const [zoom, setZoom] = useState(1)
   const scrubbing = useRef(false)
 
   useEffect(() => {
-    const el = rulerRef.current
+    const el = bodyRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => setTrackW(el.clientWidth))
+    const ro = new ResizeObserver(() => setViewW(el.clientWidth))
     ro.observe(el)
-    setTrackW(el.clientWidth)
+    setViewW(el.clientWidth)
     return () => ro.disconnect()
   }, [])
 
-  const pxPerFrame = comp.duration > 0 ? trackW / comp.duration : 0
+  const trackView = Math.max(1, viewW - GUTTER - 1) // visible track width at zoom 1 (1px safety)
+  const pxPerFrame = comp.duration > 0 ? (trackView / comp.duration) * zoom : 0
+  const contentW = trackView * zoom
+  const rowW = GUTTER + contentW
+
+  // Ctrl/Cmd + wheel zoom, anchored under the cursor (non-passive listener)
+  useEffect(() => {
+    const el = bodyRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
+      e.preventDefault()
+      const dur = useEditor.getState().comp.duration
+      const tv = Math.max(1, el.clientWidth - GUTTER)
+      const cursorX = e.clientX - el.getBoundingClientRect().left
+      const frame = ((el.scrollLeft + cursorX - GUTTER) / ((tv / dur) * zoom)) || 0
+      const next = clampZoom(zoom * (e.deltaY < 0 ? 1.18 : 1 / 1.18))
+      setZoom(next)
+      requestAnimationFrame(() => {
+        const ppf = (tv / dur) * next
+        el.scrollLeft = frame * ppf + GUTTER - cursorX
+      })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [zoom])
+
   const step = niceStep(comp.duration, pxPerFrame)
   const ticks: number[] = []
   for (let f = 0; f <= comp.duration; f += step) ticks.push(f)
@@ -119,6 +151,8 @@ export function Timeline() {
     setPlayhead((clientX - rectLeft) / pxPerFrame)
   }
 
+  const zoomBy = (factor: number) => setZoom((z) => clampZoom(z * factor))
+
   return (
     <section
       className="panel timeline"
@@ -127,13 +161,35 @@ export function Timeline() {
         ['--grid' as string]: `${Math.max(1, step * pxPerFrame)}px`,
       }}
     >
-      <div className="tl-body">
+      <div className="tl-zoom">
+        <button className="icon-btn" title="Zoom out" onClick={() => zoomBy(1 / 1.4)} disabled={zoom <= MIN_ZOOM}>
+          <Icon name="minus" size={15} />
+        </button>
+        <input
+          type="range"
+          min={MIN_ZOOM}
+          max={MAX_ZOOM}
+          step={0.1}
+          value={zoom}
+          onChange={(e) => setZoom(clampZoom(parseFloat(e.target.value)))}
+          title="Timeline zoom"
+        />
+        <button className="icon-btn" title="Zoom in" onClick={() => zoomBy(1.4)} disabled={zoom >= MAX_ZOOM}>
+          <Icon name="plus" size={15} />
+        </button>
+        <button className="icon-btn" title="Fit timeline" onClick={() => setZoom(1)} disabled={zoom === 1}>
+          <Icon name="maximize" size={14} />
+        </button>
+        <span className="tl-zoom-val">{zoom.toFixed(1)}×</span>
+      </div>
+
+      <div className="tl-body" ref={bodyRef}>
         {/* ruler */}
-        <div className="tl-row ruler-row">
+        <div className="tl-row ruler-row" style={{ width: rowW }}>
           <div className="tl-label corner">Timeline</div>
           <div
             className="tl-track ruler"
-            ref={rulerRef}
+            style={{ width: contentW }}
             onPointerDown={(e) => {
               scrubbing.current = true
               ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
@@ -159,13 +215,14 @@ export function Timeline() {
           for (const k of PROP_KINDS) for (const kf of layer[k].keyframes) unionTimes.add(kf.t)
           return (
             <div key={layer.id} className="tl-layer-block">
-              <div className={'tl-row layer' + (expanded ? ' expanded' : '')}>
+              <div className={'tl-row layer' + (expanded ? ' expanded' : '')} style={{ width: rowW }}>
                 <div className="tl-label" onPointerDown={() => selectLayer(layer.id)}>
                   <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={13} className="caret" />
                   {layer.name}
                 </div>
                 <div
                   className="tl-track"
+                  style={{ width: contentW }}
                   onPointerDown={(e) => scrubFrom(e.clientX, e.currentTarget.getBoundingClientRect().left)}
                 >
                   {!expanded &&
@@ -177,10 +234,11 @@ export function Timeline() {
 
               {expanded &&
                 PROP_KINDS.map((prop) => (
-                  <div key={prop} className="tl-row prop">
+                  <div key={prop} className="tl-row prop" style={{ width: rowW }}>
                     <div className="tl-label sub">{PROP_LABELS[prop]}</div>
                     <div
                       className="tl-track"
+                      style={{ width: contentW }}
                       onPointerDown={(e) =>
                         scrubFrom(e.clientX, e.currentTarget.getBoundingClientRect().left)
                       }

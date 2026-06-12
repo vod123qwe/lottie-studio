@@ -112,3 +112,10 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
 
 ### Auto-merge
 - Ustalone: po każdej przetestowanej zmianie robię fast-forward na `main` (deploy live sam rusza).
+
+## Sesja: 2026-06-12 (zoom timeline)
+- **Timeline zoom 1×–24×** (`Timeline.tsx`): sticky etykiety, scroll poziomy, kontrolki −/suwak/+/fit
+  + readout, Ctrl/Cmd+scroll z kotwiczeniem na kursorze. Zweryfikowane (ticks 19→91, content rośnie).
+- Następne w kolejce (życzenia usera): multi-select na artboardzie; preview mode; oraz **duża baza
+  „motion" presetów pod ikony** — wymaga: animowanych ścieżek (flaga/wave + morph) i presetów,
+  które dokładają warstwy FX (kreski prędkości, kurz, iskry). Do uzgodnienia zakres/kolejność.
