@@ -21,11 +21,12 @@
   "launch": {
     "dev": "npm run dev",
     "devUrl": "http://localhost:5173",
-    "build": "npm run build"
+    "build": "npm run build",
+    "url": "https://vod123qwe.github.io/lottie-studio/"
   },
   "links": {
     "repo": "https://github.com/vod123qwe/lottie-studio",
-    "live": ""
+    "live": "https://vod123qwe.github.io/lottie-studio/"
   },
   "icon": "sparkles",
   "accent": "#00DDB3",
