@@ -920,6 +920,50 @@ input[type='number']::-webkit-inner-spin-button {
   border-radius: 2px;
   pointer-events: none;
 }
+.overlay.editing {
+  cursor: crosshair;
+}
+.vedit-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.vedit-lines line {
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+.vpt {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  cursor: grab;
+  touch-action: none;
+  z-index: 2;
+}
+.vpt.sel {
+  background: var(--accent);
+}
+.vpt:active,
+.vhandle:active {
+  cursor: grabbing;
+}
+.vhandle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  z-index: 3;
+}
 .artboard-dim {
   position: absolute;
   bottom: -24px;

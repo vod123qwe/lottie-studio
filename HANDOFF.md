@@ -130,6 +130,16 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (edycja wektorów + gradient na stroke + IDEAS)
+- **Edycja wektorów** (`Stage.tsx` + store): przycisk „Edit points" na warstwie `path` → overlay
+  z wierzchołkami i uchwytami beziera. Drag wierzchołka/uchwytu (live, 1 undo), **dbl-click na
+  segmencie dodaje punkt**, Delete usuwa zaznaczony. Store: `pathEditId`, `selectedPoint`,
+  `setPathEdit`, `selectPoint`, `addPathPoint`, `removePathPoint`. Edycja w bazowym transformie
+  (scale 100 / rot 0); boxy innych warstw wyłączone (pointer-events) w trybie edycji.
+- **Gradient na stroke** (Lottie `gs`); wspólny payload z fill.
+- **IDEAS.md** — log pomysłów (animowane gradienty, trim paths, copy/paste kf, repeater, ...).
+- Fix Ctrl+Z, playhead pod linijką, panel warstw (grip + PPM) — wcześniej w tej sesji.
+
 ## Sesja: 2026-06-12 (color picker w stylu Figmy + gradienty)
 - `ColorPicker.tsx`: pole SV + suwak barwy + hex + próbki; zakładki Solid/Linear/Radial; edytor
   gradientu (pasek ze stopami: dodaj klikiem, przeciągaj, usuń; alfa per-stop; kąt dla linear).

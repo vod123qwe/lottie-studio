@@ -124,7 +124,9 @@ export default function App() {
       } else if (e.key === 'ArrowRight') {
         st.step(1)
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (st.selectedKeyframes.length) {
+        if (st.pathEditId && st.selectedPoint) {
+          st.removePathPoint(st.pathEditId, st.selectedPoint.sub, st.selectedPoint.idx)
+        } else if (st.selectedKeyframes.length) {
           st.removeSelectedKeyframes()
         } else if (e.key === 'Delete' && (st.selectedLayerIds.length || st.selectedLayerId)) {
           st.deleteSelected()

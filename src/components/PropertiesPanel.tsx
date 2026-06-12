@@ -295,6 +295,8 @@ export function PropertiesPanel() {
   const setStrokeGradientLive = useEditor((s) => s.setStrokeGradientLive)
   const beginInteractive = useEditor((s) => s.beginInteractive)
   const endInteractive = useEditor((s) => s.endInteractive)
+  const pathEditId = useEditor((s) => s.pathEditId)
+  const setPathEdit = useEditor((s) => s.setPathEdit)
   const selCount = useEditor((s) => s.selectedLayerIds.length)
 
   return (
@@ -408,6 +410,19 @@ export function PropertiesPanel() {
                   />
                 </div>
               </label>
+            )}
+
+            {layer.shape === 'path' && !layer.pathKeyframes && (
+              <div className="row">
+                <button
+                  className={pathEditId === layer.id ? 'primary' : ''}
+                  style={{ flex: 1 }}
+                  onClick={() => setPathEdit(pathEditId === layer.id ? null : layer.id)}
+                  title="Edit vertices & bezier handles on the canvas (double-click a segment to add a point)"
+                >
+                  <Icon name="pencil" /> {pathEditId === layer.id ? 'Done editing' : 'Edit points'}
+                </button>
+              </div>
             )}
           </Section>
 

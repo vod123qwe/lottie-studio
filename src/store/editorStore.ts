@@ -38,6 +38,8 @@ interface EditorState {
   autoKey: boolean
   previewOpen: boolean
   contextMenu: { x: number; y: number; layerId: string } | null
+  pathEditId: string | null // layer whose vertices are being edited
+  selectedPoint: { sub: number; idx: number } | null
   past: Composition[]
   future: Composition[]
   interactiveBase: Composition | null
@@ -83,6 +85,10 @@ interface EditorState {
   resetLayer: (id: string) => void
   openLayerMenu: (x: number, y: number, layerId: string) => void
   closeMenu: () => void
+  setPathEdit: (id: string | null) => void
+  selectPoint: (p: { sub: number; idx: number } | null) => void
+  addPathPoint: (layerId: string, sub: number, insertIdx: number, v: [number, number]) => void
+  removePathPoint: (layerId: string, sub: number, idx: number) => void
 
   // properties / keyframes
   setProperty: (layerId: string, prop: PropKind, value: number[]) => void
@@ -178,6 +184,8 @@ export const useEditor = create<EditorState>((set, get) => {
     autoKey: true,
     previewOpen: false,
     contextMenu: null,
+    pathEditId: null,
+    selectedPoint: null,
     past: [],
     future: [],
     interactiveBase: null,
@@ -200,7 +208,36 @@ export const useEditor = create<EditorState>((set, get) => {
     toggleAutoKey: () => set((s) => ({ autoKey: !s.autoKey })),
     setPreview: (open) => set({ previewOpen: open, playing: false }),
     selectLayer: (id) =>
-      set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [], selectedKeyframe: null, selectedKeyframes: [] }),
+      set({
+        selectedLayerId: id,
+        selectedLayerIds: id ? [id] : [],
+        selectedKeyframe: null,
+        selectedKeyframes: [],
+        pathEditId: null,
+        selectedPoint: null,
+      }),
+    setPathEdit: (id) => set({ pathEditId: id, selectedPoint: null }),
+    selectPoint: (p) => set({ selectedPoint: p }),
+    addPathPoint: (layerId, sub, insertIdx, v) =>
+      withHistory((c) => {
+        const l = findLayer(c, layerId)
+        const sp = l?.path?.[sub]
+        if (!sp) return
+        sp.v.splice(insertIdx, 0, [v[0], v[1]])
+        sp.i.splice(insertIdx, 0, [0, 0])
+        sp.o.splice(insertIdx, 0, [0, 0])
+      }),
+    removePathPoint: (layerId, sub, idx) => {
+      withHistory((c) => {
+        const l = findLayer(c, layerId)
+        const sp = l?.path?.[sub]
+        if (!sp || sp.v.length <= 2) return
+        sp.v.splice(idx, 1)
+        sp.i.splice(idx, 1)
+        sp.o.splice(idx, 1)
+      })
+      set({ selectedPoint: null })
+    },
     toggleSelect: (id) =>
       set((s) => {
         const has = s.selectedLayerIds.includes(id)
