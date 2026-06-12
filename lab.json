@@ -1,0 +1,36 @@
+{
+  "name": "Lottie Studio",
+  "tagline": "Webowy kreator animacji Lottie od zera — sceny, warstwy, timeline z keyframe'ami, presety i eksport .json/.lottie.",
+  "category": "tool",
+  "status": "wip",
+  "type": "web-server",
+  "tags": [
+    "lottie",
+    "animacja",
+    "editor",
+    "motion",
+    "narzędzie"
+  ],
+  "tech": [
+    "vite",
+    "react",
+    "typescript",
+    "zustand",
+    "lottie-web"
+  ],
+  "launch": {
+    "dev": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "build": "npm run build"
+  },
+  "links": {
+    "repo": "",
+    "live": ""
+  },
+  "icon": "sparkles",
+  "accent": "#00DDB3",
+  "pinned": false,
+  "size": "lg",
+  "description": "Edytor/kreator animacji Lottie działający w przeglądarce. Budujesz animację od zera: dodajesz warstwy z kształtami, ustawiasz keyframe'y dla pozycji, skali, rotacji, opacity i koloru na timeline, korzystasz z gotowych presetów (Fade In, Pop, Slide, Spin, Pulse). Podgląd renderowany na żywo przez lottie-web, eksport do gotowego Lottie JSON. Stack: Vite + React + TypeScript + Zustand. v0.1 — fundament edytora.",
+  "notes": "v0.1 scaffold: stage + warstwy + timeline z keyframe'ami + properties + presety + export JSON. TODO: .lottie (dotLottie), import istniejących plików, więcej kształtów (path/text), spatial bezier, undo dla keyframe drag."
+}
