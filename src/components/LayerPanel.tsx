@@ -9,8 +9,10 @@ import { Icon } from './Icons'
 
 export function LayerPanel() {
   const layers = useEditor((s) => s.comp.layers)
-  const selectedId = useEditor((s) => s.selectedLayerId)
+  const selectedIds = useEditor((s) => s.selectedLayerIds)
+  const primaryId = useEditor((s) => s.selectedLayerId)
   const selectLayer = useEditor((s) => s.selectLayer)
+  const toggleSelect = useEditor((s) => s.toggleSelect)
   const toggleVisible = useEditor((s) => s.toggleVisible)
   const reorderLayer = useEditor((s) => s.reorderLayer)
   const duplicateLayer = useEditor((s) => s.duplicateLayer)
@@ -32,10 +34,11 @@ export function LayerPanel() {
             key={l.id}
             className={
               'layer-row' +
-              (l.id === selectedId ? ' selected' : '') +
+              (selectedIds.includes(l.id) ? ' selected' : '') +
+              (l.id === primaryId ? ' primary' : '') +
               (l.visible ? '' : ' hidden')
             }
-            onPointerDown={() => selectLayer(l.id)}
+            onPointerDown={(e) => (e.shiftKey || e.metaKey || e.ctrlKey ? toggleSelect(l.id) : selectLayer(l.id))}
           >
             <button
               className="eye"

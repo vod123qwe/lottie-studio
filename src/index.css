@@ -491,6 +491,21 @@ input[type='number']::-webkit-inner-spin-button {
   background: var(--accent-soft);
   border-color: rgba(47, 91, 246, 0.35);
 }
+.layer-row.selected.primary {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.multi-note {
+  margin: 10px 14px 0;
+  padding: 7px 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(47, 91, 246, 0.3);
+  border-radius: var(--r-ctrl);
+  color: var(--accent);
+  font-size: 12px;
+}
+.multi-note b {
+  font-weight: 600;
+}
 .eye {
   padding: 3px;
   background: none;
@@ -606,6 +621,13 @@ input[type='number']::-webkit-inner-spin-button {
   background: #fff;
   border: 1.5px solid var(--accent);
   border-radius: 2px;
+}
+.marquee {
+  position: absolute;
+  border: 1px solid var(--accent);
+  background: rgba(47, 91, 246, 0.1);
+  border-radius: 2px;
+  pointer-events: none;
 }
 .artboard-dim {
   position: absolute;

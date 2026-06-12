@@ -9,7 +9,7 @@ import type {
 } from '../core/model'
 import { createComposition, createLayer, uid } from '../core/factory'
 import { evalProperty } from '../core/interpolate'
-import { PRESETS } from '../core/presets'
+import { PRESETS, type PresetResult } from '../core/presets'
 
 // ---------------------------------------------------------------------------
 // Central editor store.
@@ -27,7 +27,8 @@ export interface KeyframeRef {
 
 interface EditorState {
   comp: Composition
-  selectedLayerId: string | null
+  selectedLayerId: string | null // "primary" selection (drives the inspector)
+  selectedLayerIds: string[] // full multi-selection (includes the primary)
   selectedKeyframe: KeyframeRef | null
   playhead: number
   playing: boolean
@@ -43,6 +44,9 @@ interface EditorState {
   togglePlaying: () => void
   toggleAutoKey: () => void
   selectLayer: (id: string | null) => void
+  toggleSelect: (id: string) => void
+  selectLayers: (ids: string[]) => void
+  deleteSelected: () => void
   selectKeyframe: (ref: KeyframeRef | null) => void
 
   // composition
@@ -69,6 +73,7 @@ interface EditorState {
   // live drag: snapshot once, stream updates, commit once
   beginInteractive: () => void
   setPropertyLive: (layerId: string, prop: PropKind, value: number[]) => void
+  setLayerPositionsLive: (positions: Record<string, [number, number]>) => void
   mutateLive: (producer: (draft: Composition) => void) => void
   endInteractive: () => void
   toggleAnimated: (layerId: string, prop: PropKind) => void
@@ -82,6 +87,7 @@ interface EditorState {
     easing: Easing,
   ) => void
   applyPreset: (layerId: string, presetId: string) => void
+  applyPresetToSelected: (presetId: string) => void
 
   // history
   undo: () => void
@@ -143,6 +149,7 @@ export const useEditor = create<EditorState>((set, get) => {
   return {
     comp: createComposition(),
     selectedLayerId: null,
+    selectedLayerIds: [],
     selectedKeyframe: null,
     playhead: 0,
     playing: false,
@@ -167,7 +174,35 @@ export const useEditor = create<EditorState>((set, get) => {
     setPlaying: (playing) => set({ playing }),
     togglePlaying: () => set((s) => ({ playing: !s.playing })),
     toggleAutoKey: () => set((s) => ({ autoKey: !s.autoKey })),
-    selectLayer: (id) => set({ selectedLayerId: id, selectedKeyframe: null }),
+    selectLayer: (id) =>
+      set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [], selectedKeyframe: null }),
+    toggleSelect: (id) =>
+      set((s) => {
+        const has = s.selectedLayerIds.includes(id)
+        const ids = has ? s.selectedLayerIds.filter((x) => x !== id) : [...s.selectedLayerIds, id]
+        return {
+          selectedLayerIds: ids,
+          selectedLayerId: has ? (ids[ids.length - 1] ?? null) : id,
+          selectedKeyframe: null,
+        }
+      }),
+    selectLayers: (ids) =>
+      set({ selectedLayerIds: ids, selectedLayerId: ids[ids.length - 1] ?? null, selectedKeyframe: null }),
+    deleteSelected: () =>
+      set((s) => {
+        const kill = new Set(s.selectedLayerIds.length ? s.selectedLayerIds : s.selectedLayerId ? [s.selectedLayerId] : [])
+        if (!kill.size) return s
+        const draft = clone(s.comp)
+        draft.layers = draft.layers.filter((l) => !kill.has(l.id))
+        return {
+          comp: draft,
+          past: [...s.past, s.comp].slice(-80),
+          future: [],
+          selectedLayerId: null,
+          selectedLayerIds: [],
+          selectedKeyframe: null,
+        }
+      }),
     selectKeyframe: (ref) => set({ selectedKeyframe: ref }),
 
     // ---- composition ----------------------------------------------------
@@ -183,6 +218,7 @@ export const useEditor = create<EditorState>((set, get) => {
       set({
         comp: createComposition(),
         selectedLayerId: null,
+        selectedLayerIds: [],
         selectedKeyframe: null,
         playhead: 0,
         playing: false,
@@ -193,6 +229,7 @@ export const useEditor = create<EditorState>((set, get) => {
       set({
         comp,
         selectedLayerId: null,
+        selectedLayerIds: [],
         selectedKeyframe: null,
         playhead: 0,
         playing: false,
@@ -206,21 +243,24 @@ export const useEditor = create<EditorState>((set, get) => {
       withHistory((c) => {
         c.layers.unshift(layer)
       })
-      set({ selectedLayerId: layer.id })
+      set({ selectedLayerId: layer.id, selectedLayerIds: [layer.id] })
     },
     addLayers: (layers) => {
       if (!layers.length) return
       withHistory((c) => {
         c.layers.unshift(...layers)
       })
-      set({ selectedLayerId: layers[0].id })
+      set({ selectedLayerId: layers[0].id, selectedLayerIds: layers.map((l) => l.id) })
     },
     deleteLayer: (id) => {
       withHistory((c) => {
         c.layers = c.layers.filter((l) => l.id !== id)
       })
-      if (get().selectedLayerId === id)
-        set({ selectedLayerId: null, selectedKeyframe: null })
+      set((s) => ({
+        selectedLayerIds: s.selectedLayerIds.filter((x) => x !== id),
+        selectedLayerId: s.selectedLayerId === id ? null : s.selectedLayerId,
+        selectedKeyframe: s.selectedLayerId === id ? null : s.selectedKeyframe,
+      }))
     },
     duplicateLayer: (id) => {
       let newId: string | null = null
@@ -237,7 +277,7 @@ export const useEditor = create<EditorState>((set, get) => {
         newId = copy.id
         c.layers.splice(idx, 0, copy)
       })
-      if (newId) set({ selectedLayerId: newId })
+      if (newId) set({ selectedLayerId: newId, selectedLayerIds: [newId] })
     },
     renameLayer: (id, name) =>
       withHistory((c) => {
@@ -295,6 +335,14 @@ export const useEditor = create<EditorState>((set, get) => {
       set((s) => {
         const draft = clone(s.comp)
         writeProperty(draft, layerId, prop, value, playhead, autoKey)
+        return { comp: draft }
+      })
+    },
+    setLayerPositionsLive: (positions) => {
+      const { playhead, autoKey } = get()
+      set((s) => {
+        const draft = clone(s.comp)
+        for (const id in positions) writeProperty(draft, id, 'position', positions[id], playhead, autoKey)
         return { comp: draft }
       })
     },
@@ -394,19 +442,53 @@ export const useEditor = create<EditorState>((set, get) => {
         }
       })
     },
+    applyPresetToSelected: (presetId) => {
+      const preset = PRESETS.find((p) => p.id === presetId)
+      if (!preset) return
+      const { comp, selectedLayerIds, selectedLayerId } = get()
+      const ids = selectedLayerIds.length ? selectedLayerIds : selectedLayerId ? [selectedLayerId] : []
+      if (!ids.length) return
+      // build per layer against the current comp, then commit as one history step
+      const builds = ids
+        .map((id) => {
+          const l = findLayer(comp, id)
+          if (!l) return null
+          const out = preset.build(l, comp)
+          return { id, res: Array.isArray(out) ? { changes: out } : out }
+        })
+        .filter((b): b is { id: string; res: PresetResult } => b !== null)
+      withHistory((c) => {
+        for (const b of builds) {
+          const l = findLayer(c, b.id)
+          if (!l) continue
+          for (const change of b.res.changes ?? []) {
+            const p = l[change.prop]
+            p.animated = true
+            p.keyframes = change.keyframes
+          }
+          if (b.res.pathKeyframes?.length) l.pathKeyframes = b.res.pathKeyframes
+          if (b.res.addLayers?.length) {
+            const idx = c.layers.findIndex((x) => x.id === b.id)
+            c.layers.splice(idx < 0 ? c.layers.length : idx + 1, 0, ...b.res.addLayers)
+          }
+        }
+      })
+    },
 
     // ---- history --------------------------------------------------------
     undo: () =>
       set((s) => {
         if (s.past.length === 0) return s
         const prev = s.past[s.past.length - 1]
-        const selExists = prev.layers.some((l) => l.id === s.selectedLayerId)
+        const present = new Set(prev.layers.map((l) => l.id))
+        const ids = s.selectedLayerIds.filter((id) => present.has(id))
         return {
           comp: prev,
           past: s.past.slice(0, -1),
           future: [s.comp, ...s.future].slice(0, 80),
           playhead: Math.min(s.playhead, prev.duration),
-          selectedLayerId: selExists ? s.selectedLayerId : null,
+          selectedLayerIds: ids,
+          selectedLayerId: present.has(s.selectedLayerId ?? '') ? s.selectedLayerId : ids[ids.length - 1] ?? null,
           selectedKeyframe: null,
         }
       }),
@@ -414,13 +496,15 @@ export const useEditor = create<EditorState>((set, get) => {
       set((s) => {
         if (s.future.length === 0) return s
         const next = s.future[0]
-        const selExists = next.layers.some((l) => l.id === s.selectedLayerId)
+        const present = new Set(next.layers.map((l) => l.id))
+        const ids = s.selectedLayerIds.filter((id) => present.has(id))
         return {
           comp: next,
           future: s.future.slice(1),
           past: [...s.past, s.comp].slice(-80),
           playhead: Math.min(s.playhead, next.duration),
-          selectedLayerId: selExists ? s.selectedLayerId : null,
+          selectedLayerIds: ids,
+          selectedLayerId: present.has(s.selectedLayerId ?? '') ? s.selectedLayerId : ids[ids.length - 1] ?? null,
           selectedKeyframe: null,
         }
       }),

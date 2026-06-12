@@ -106,8 +106,8 @@ export default function App() {
         if (k) {
           st.removeKeyframe(k.layerId, k.prop, k.kfId)
           st.selectKeyframe(null)
-        } else if (e.key === 'Delete' && st.selectedLayerId) {
-          st.deleteLayer(st.selectedLayerId)
+        } else if (e.key === 'Delete' && (st.selectedLayerIds.length || st.selectedLayerId)) {
+          st.deleteSelected()
         }
       } else if (mod && e.key.toLowerCase() === 'z') {
         e.preventDefault()

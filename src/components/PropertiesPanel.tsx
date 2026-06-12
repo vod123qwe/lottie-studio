@@ -184,12 +184,13 @@ function PropControls({ layerId, kind, prop }: { layerId: string; kind: PropKind
   )
 }
 
-function Presets({ layerId }: { layerId: string }) {
-  const applyPreset = useEditor((s) => s.applyPreset)
+function Presets() {
+  const applyToSelected = useEditor((s) => s.applyPresetToSelected)
+  const selCount = useEditor((s) => s.selectedLayerIds.length)
   const [cat, setCat] = useState<PresetCategory>('in')
   const list = PRESETS.filter((p) => p.category === cat)
   return (
-    <Section title="Presets">
+    <Section title="Presets" sub={selCount > 1 ? `applies to ${selCount}` : undefined}>
       <div className="cat-tabs">
         {PRESET_CATEGORIES.map((c) => (
           <button
@@ -203,7 +204,7 @@ function Presets({ layerId }: { layerId: string }) {
       </div>
       <div className="preset-grid">
         {list.map((p) => (
-          <button key={p.id} className="preset" title={p.hint} onClick={() => applyPreset(layerId, p.id)}>
+          <button key={p.id} className="preset" title={p.hint} onClick={() => applyToSelected(p.id)}>
             <Icon name={PRESET_ICONS[p.id] ?? 'sparkles'} size={15} />
             {p.name}
           </button>
@@ -256,10 +257,17 @@ export function PropertiesPanel() {
   const setFillEnabled = useEditor((s) => s.setFillEnabled)
   const setStrokeColor = useEditor((s) => s.setStrokeColor)
   const setStrokeWidth = useEditor((s) => s.setStrokeWidth)
+  const selCount = useEditor((s) => s.selectedLayerIds.length)
 
   return (
     <section className="panel props-panel">
       <CompSettings />
+
+      {selCount > 1 && (
+        <p className="multi-note">
+          {selCount} layers selected · editing <b>{layer?.name}</b>
+        </p>
+      )}
 
       {!layer && <p className="empty">Select a layer to edit its properties.</p>}
 
@@ -409,7 +417,7 @@ export function PropertiesPanel() {
             </div>
           </Section>
 
-          <Presets layerId={layer.id} />
+          <Presets />
         </>
       )}
 
