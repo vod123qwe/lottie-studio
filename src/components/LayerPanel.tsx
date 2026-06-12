@@ -13,6 +13,7 @@ export function LayerPanel() {
   const primaryId = useEditor((s) => s.selectedLayerId)
   const selectLayer = useEditor((s) => s.selectLayer)
   const toggleSelect = useEditor((s) => s.toggleSelect)
+  const openLayerMenu = useEditor((s) => s.openLayerMenu)
   const toggleVisible = useEditor((s) => s.toggleVisible)
   const reorderLayer = useEditor((s) => s.reorderLayer)
   const duplicateLayer = useEditor((s) => s.duplicateLayer)
@@ -39,6 +40,11 @@ export function LayerPanel() {
               (l.visible ? '' : ' hidden')
             }
             onPointerDown={(e) => (e.shiftKey || e.metaKey || e.ctrlKey ? toggleSelect(l.id) : selectLayer(l.id))}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              selectLayer(l.id)
+              openLayerMenu(e.clientX, e.clientY, l.id)
+            }}
           >
             <button
               className="eye"

@@ -6,6 +6,7 @@ import { LayerPanel } from './components/LayerPanel'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { Timeline } from './components/Timeline'
 import { Preview } from './components/Preview'
+import { ContextMenu } from './components/ContextMenu'
 import { Icon } from './components/Icons'
 
 // Mobile shell kicks in below this width.
@@ -171,6 +172,7 @@ export default function App() {
           </button>
         </nav>
         <Preview />
+        <ContextMenu />
       </div>
     )
   }
@@ -191,6 +193,7 @@ export default function App() {
       <div className="splitter row" onPointerDown={startResize('timeline', 'y', -1)} title="Drag to resize" />
       <Timeline />
       <Preview />
+      <ContextMenu />
     </div>
   )
 }

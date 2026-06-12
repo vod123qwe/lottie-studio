@@ -35,6 +35,7 @@ interface EditorState {
   playing: boolean
   autoKey: boolean
   previewOpen: boolean
+  contextMenu: { x: number; y: number; layerId: string } | null
   past: Composition[]
   future: Composition[]
   interactiveBase: Composition | null
@@ -74,6 +75,9 @@ interface EditorState {
   setFillEnabled: (id: string, enabled: boolean) => void
   setStrokeColor: (id: string, color: number[]) => void
   setStrokeWidth: (id: string, width: number) => void
+  resetLayer: (id: string) => void
+  openLayerMenu: (x: number, y: number, layerId: string) => void
+  closeMenu: () => void
 
   // properties / keyframes
   setProperty: (layerId: string, prop: PropKind, value: number[]) => void
@@ -163,6 +167,7 @@ export const useEditor = create<EditorState>((set, get) => {
     playing: false,
     autoKey: true,
     previewOpen: false,
+    contextMenu: null,
     past: [],
     future: [],
     interactiveBase: null,
@@ -379,6 +384,21 @@ export const useEditor = create<EditorState>((set, get) => {
         const l = findLayer(c, id)
         if (l && l.stroke) l.stroke = { ...l.stroke, width: Math.max(0, width) }
       }),
+    resetLayer: (id) =>
+      withHistory((c) => {
+        const l = findLayer(c, id)
+        if (!l) return
+        // de-animate everything; keep where it sits, neutralize transform
+        const pos = evalProperty(l.position, 0)
+        l.position = { animated: false, value: [pos[0], pos[1]], keyframes: [] }
+        l.scale = { animated: false, value: [100, 100], keyframes: [] }
+        l.rotation = { animated: false, value: [0], keyframes: [] }
+        l.opacity = { animated: false, value: [100], keyframes: [] }
+        l.fillColor = { animated: false, value: l.fillColor.value, keyframes: [] }
+        l.pathKeyframes = undefined
+      }),
+    openLayerMenu: (x, y, layerId) => set({ contextMenu: { x, y, layerId } }),
+    closeMenu: () => set({ contextMenu: null }),
 
     // ---- properties / keyframes ----------------------------------------
     setProperty: (layerId, prop, value) => {

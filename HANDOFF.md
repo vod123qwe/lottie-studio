@@ -130,6 +130,17 @@ Czytelna w aplikacji GitHub albo w sesji Claude w chmurze podpiętej do tego rep
   w zakresie/posortowane, realna animacja, spójna liczba wierzchołków w morph/wave (wymóg Lottie),
   czysty JSON buildera, brak duplikatów ID. + smoke przez UI (klik wszystkich 65, brak błędów).
   Wynik: 65/65 PASS.
+## Sesja: 2026-06-12 (multi-expand timeline + menu kontekstowe)
+- **Wiele warstw rozwiniętych naraz** na timeline (lokalny `Set` expanded; zaznaczenie warstwy
+  ją rozwija, caret toggluje; inne zostają). Marquee/uchwyt keyframe'ów uogólnione na układ
+  wierszy → działają też **między warstwami**.
+- **Menu pod prawym przyciskiem** na warstwie (panel + timeline): Reset layer / Duplicate /
+  Hide / Delete (`ContextMenu.tsx`, store `contextMenu` + `openLayerMenu/closeMenu`).
+- **Reset layer** (`resetLayer`): zdejmuje animacje (de-animate), zeruje scale/rotation/opacity,
+  zostawia pozycję w miejscu, usuwa pathKeyframes. Zweryfikowane (2 warstwy = 10 wierszy, reset 2kf→0).
+- TODO (życzenia usera): edycja wektorów/punktów jak Figma; color picker Figma + gradienty;
+  lepsze umiejscowienie zoomu timeline (nawigator jak AE).
+
 ## Sesja: 2026-06-12 (multi-select keyframe'ów na timeline)
 - Store: `selectedKeyframes[]` (+ primary), `toggleKeyframe`, `selectKeyframes`,
   `removeSelectedKeyframes`, `setKeyframeTimesLive` (live, re-sortuje dotknięte property).

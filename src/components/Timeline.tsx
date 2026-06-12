@@ -10,11 +10,10 @@ import {
 import { Icon } from './Icons'
 
 // ---------------------------------------------------------------------------
-// Timeline: scrubbable ruler + one row per layer; the selected layer expands
-// into per-property tracks. Keyframes support canvas-style multi-select:
-// shift-click to toggle, rubber-band on the tracks to marquee-select, drag any
-// selected diamond to move the group, and drag the selection bracket's edges to
-// squeeze / stretch the whole group in time. Horizontally zoomable (1×–24×).
+// Timeline: scrubbable ruler + layer rows. Any number of layers can be expanded
+// into per-property tracks at once. Keyframes support canvas-style multi-select
+// (shift-click, marquee across rows/layers), group move, and a selection
+// bracket whose edges squeeze / stretch the group in time. Zoomable 1×–24×.
 // ---------------------------------------------------------------------------
 
 const GUTTER = 140
@@ -25,6 +24,7 @@ const MAX_ZOOM = 24
 
 const eqRef = (a: KeyframeRef, b: KeyframeRef) =>
   a.layerId === b.layerId && a.prop === b.prop && a.kfId === b.kfId
+const rowKey = (layerId: string, prop: PropKind) => `${layerId}::${prop}`
 
 interface SnapKf {
   layerId: string
@@ -123,6 +123,7 @@ export function Timeline() {
   const beginInteractive = useEditor((s) => s.beginInteractive)
   const setKeyframeTimesLive = useEditor((s) => s.setKeyframeTimesLive)
   const endInteractive = useEditor((s) => s.endInteractive)
+  const openLayerMenu = useEditor((s) => s.openLayerMenu)
 
   const bodyRef = useRef<HTMLDivElement>(null)
   const rulerTrackRef = useRef<HTMLDivElement>(null)
@@ -132,7 +133,20 @@ export function Timeline() {
   const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
   const [viewW, setViewW] = useState(0)
   const [zoom, setZoom] = useState(1)
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(selectedLayerId ? [selectedLayerId] : []))
   const scrubbing = useRef(false)
+
+  // selecting a layer expands it (without collapsing the others)
+  useEffect(() => {
+    if (selectedLayerId) setExpanded((s) => (s.has(selectedLayerId) ? s : new Set(s).add(selectedLayerId)))
+  }, [selectedLayerId])
+
+  const toggleExpand = (id: string) =>
+    setExpanded((s) => {
+      const n = new Set(s)
+      n.has(id) ? n.delete(id) : n.add(id)
+      return n
+    })
 
   useEffect(() => {
     const el = bodyRef.current
@@ -173,13 +187,22 @@ export function Timeline() {
   const ticks: number[] = []
   for (let f = 0; f <= comp.duration; f += step) ticks.push(f)
 
+  // content-y of every visible property row, keyed by layer::prop
+  const rowY = new Map<string, number>()
+  {
+    let cursor = RULER
+    for (const layer of comp.layers) {
+      cursor += ROW // layer row
+      if (expanded.has(layer.id)) for (const prop of PROP_KINDS) rowY.set(rowKey(layer.id, prop), (cursor += 0, cursor)), (cursor += ROW)
+    }
+  }
+
   const scrubFrom = (clientX: number, rectLeft: number) => {
     if (!pxPerFrame) return
     setPlayhead((clientX - rectLeft) / pxPerFrame)
   }
   const zoomBy = (factor: number) => setZoom((z) => clampZoom(z * factor))
 
-  // content-space x/y from a pointer event (accounts for scroll)
   const contentXY = (e: React.PointerEvent): [number, number] => {
     const el = bodyRef.current
     if (!el) return [0, 0]
@@ -187,9 +210,7 @@ export function Timeline() {
     return [e.clientX - r.left + el.scrollLeft, e.clientY - r.top + el.scrollTop]
   }
 
-  const expandedIdx = comp.layers.findIndex((l) => l.id === selectedLayerId)
-
-  // ---- marquee select over the expanded layer's property tracks --------
+  // ---- marquee over any expanded property tracks -----------------------
   function onTrackDown(e: React.PointerEvent) {
     const [x, y] = contentXY(e)
     marqueeRef.current = { x0: x, y0: y, x1: x, y1: y, moved: false }
@@ -217,39 +238,40 @@ export function Timeline() {
     const tB = (Math.max(m.x0, m.x1) - GUTTER) / pxPerFrame
     const yA = Math.min(m.y0, m.y1)
     const yB = Math.max(m.y0, m.y1)
-    const blockTop = RULER + expandedIdx * ROW + ROW
-    const layer = comp.layers[expandedIdx]
-    if (!layer) return
     const refs: KeyframeRef[] = []
-    PROP_KINDS.forEach((prop, j) => {
-      const rowTop = blockTop + j * ROW
-      if (rowTop + ROW < yA || rowTop > yB) return
-      const p = layer[prop]
-      if (!p.animated) return
-      for (const k of p.keyframes) if (k.t >= tA && k.t <= tB) refs.push({ layerId: layer.id, prop, kfId: k.id })
-    })
+    for (const layer of comp.layers) {
+      if (!expanded.has(layer.id)) continue
+      for (const prop of PROP_KINDS) {
+        const ry = rowY.get(rowKey(layer.id, prop))
+        if (ry === undefined || ry + ROW < yA || ry > yB) continue
+        const p = layer[prop]
+        if (!p.animated) continue
+        for (const k of p.keyframes) if (k.t >= tA && k.t <= tB) refs.push({ layerId: layer.id, prop, kfId: k.id })
+      }
+    }
     selectKeyframes(refs)
   }
 
   // ---- selection bracket (move / squeeze) ------------------------------
-  const selForLayer = selectedKeyframes.filter((r) => r.layerId === selectedLayerId)
-  const bracketTimes = selForLayer
-    .map((r) => comp.layers[expandedIdx]?.[r.prop].keyframes.find((k) => k.id === r.kfId)?.t)
-    .filter((t): t is number => t !== undefined)
-  const showBracket = expandedIdx >= 0 && bracketTimes.length >= 2 && selForLayer.length === selectedKeyframes.length
-  const bMinT = showBracket ? Math.min(...bracketTimes) : 0
-  const bMaxT = showBracket ? Math.max(...bracketTimes) : 0
+  const findKf = (r: KeyframeRef) =>
+    comp.layers.find((l) => l.id === r.layerId)?.[r.prop].keyframes.find((k) => k.id === r.kfId)
+  const selRowYs = selectedKeyframes.map((r) => rowY.get(rowKey(r.layerId, r.prop)))
+  const selTimes = selectedKeyframes.map((r) => findKf(r)?.t)
+  const allVisible = selRowYs.every((y) => y !== undefined) && selTimes.every((t) => t !== undefined)
+  const showBracket = selectedKeyframes.length >= 2 && allVisible
+  const bMinT = showBracket ? Math.min(...(selTimes as number[])) : 0
+  const bMaxT = showBracket ? Math.max(...(selTimes as number[])) : 0
+  const bTop = showBracket ? Math.min(...(selRowYs as number[])) : 0
+  const bBottom = showBracket ? Math.max(...(selRowYs as number[])) + ROW : 0
 
-  const snapshotSel = (): SnapKf[] => {
-    const layer = comp.layers[expandedIdx]
-    if (!layer) return []
-    return selForLayer
+  const snapshotSel = (): SnapKf[] =>
+    selectedKeyframes
       .map((r) => {
-        const k = layer[r.prop].keyframes.find((x) => x.id === r.kfId)
+        const k = findKf(r)
         return k ? { layerId: r.layerId, prop: r.prop, kfId: r.kfId, t0: k.t } : null
       })
       .filter((x): x is SnapKf => x !== null)
-  }
+
   function onBracketDown(e: React.PointerEvent, mode: 'move' | 'left' | 'right') {
     e.stopPropagation()
     bracketRef.current = { mode, minT: bMinT, maxT: bMaxT, startX: e.clientX, snap: snapshotSel() }
@@ -363,14 +385,37 @@ export function Timeline() {
 
         {/* layer rows */}
         {comp.layers.map((layer) => {
-          const expanded = layer.id === selectedLayerId
+          const isExpanded = expanded.has(layer.id)
           const unionTimes = new Set<number>()
           for (const k of PROP_KINDS) for (const kf of layer[k].keyframes) unionTimes.add(kf.t)
           return (
             <div key={layer.id} className="tl-layer-block">
-              <div className={'tl-row layer' + (expanded ? ' expanded' : '')} style={{ width: rowW }}>
-                <div className="tl-label" onPointerDown={() => selectLayer(layer.id)}>
-                  <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size={13} className="caret" />
+              <div
+                className={'tl-row layer' + (isExpanded ? ' expanded' : '') + (layer.id === selectedLayerId ? ' selected' : '')}
+                style={{ width: rowW }}
+              >
+                <div
+                  className="tl-label"
+                  onPointerDown={(e) => {
+                    if ((e.target as HTMLElement).closest('.caret-btn')) return
+                    selectLayer(layer.id)
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    selectLayer(layer.id)
+                    openLayerMenu(e.clientX, e.clientY, layer.id)
+                  }}
+                >
+                  <button
+                    className="caret-btn"
+                    title={isExpanded ? 'Collapse' : 'Expand'}
+                    onPointerDown={(e) => {
+                      e.stopPropagation()
+                      toggleExpand(layer.id)
+                    }}
+                  >
+                    <Icon name={isExpanded ? 'chevron-down' : 'chevron-right'} size={13} className="caret" />
+                  </button>
                   {layer.name}
                 </div>
                 <div
@@ -378,14 +423,14 @@ export function Timeline() {
                   style={{ width: contentW }}
                   onPointerDown={(e) => scrubFrom(e.clientX, e.currentTarget.getBoundingClientRect().left)}
                 >
-                  {!expanded &&
+                  {!isExpanded &&
                     [...unionTimes].map((t) => (
                       <div key={t} className="kf summary" style={{ left: t * pxPerFrame }} />
                     ))}
                 </div>
               </div>
 
-              {expanded &&
+              {isExpanded &&
                 PROP_KINDS.map((prop) => (
                   <div key={prop} className="tl-row prop" style={{ width: rowW }}>
                     <div className="tl-label sub">{PROP_LABELS[prop]}</div>
@@ -426,9 +471,9 @@ export function Timeline() {
             className="kf-bracket"
             style={{
               left: GUTTER + bMinT * pxPerFrame,
-              top: RULER + expandedIdx * ROW + ROW,
+              top: bTop,
               width: Math.max(2, (bMaxT - bMinT) * pxPerFrame),
-              height: PROP_KINDS.length * ROW,
+              height: bBottom - bTop,
             }}
             onPointerDown={(e) => onBracketDown(e, 'move')}
             onPointerMove={onBracketMove}
